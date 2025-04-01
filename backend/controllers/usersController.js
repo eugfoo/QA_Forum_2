@@ -74,6 +74,28 @@ const getProfile = async (req, res) => {
     }
 };
 
+// controllers/usersController.js
+// usersController.js
+const getCurrentUser = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const user = await User.findById(req.session.user._id);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ user });
+    } catch (err) {
+        console.error('Error fetching user:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 // Update the user's profile
 const updateProfile = async (req, res) => {
     try {
@@ -133,5 +155,6 @@ module.exports = {
     logoutUser,
     getProfile,
     updateProfile,
-    updateSettings
+    updateSettings,
+    getCurrentUser
 };

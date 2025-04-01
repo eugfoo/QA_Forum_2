@@ -1,30 +1,29 @@
 // src/components/ProfilePage.jsx
-import React, {useContext} from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
-
+import { fetchCurrentUser } from '../services/api'; // You'll define this
 
 const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg }) => {
-    const { currentUser } = useContext(AuthContext);
 
-    if (!currentUser) {
-        return null; // or a loader
-    }
+    const { currentUser, setCurrentUser } = useContext(AuthContext); // ✅ fixed here
+    useEffect(() => {
+        if (!currentUser) {
+            return null; // or a loader
+        }
+        const getUpdatedUser = async () => {
+            try {
+                const res = await fetchCurrentUser();
+                setCurrentUser(res.data.user);
+            } catch (err) {
+                console.error('Failed to refresh user:', err);
+            }
+        };
+        getUpdatedUser();
+    }, []);
+
     return (
         <div>
-            {/* Toast container for alerts */}
-            <div id="toast-container" className="fixed top-20 right-4 z-50 flex flex-col space-y-2">
-                {errorMsg && (
-                    <div className="bg-red-200 text-red-800 p-2 rounded">
-                        {errorMsg}
-                    </div>
-                )}
-                {successMsg && (
-                    <div className="bg-green-200 text-green-800 p-2 rounded">
-                        {successMsg}
-                    </div>
-                )}
-            </div>
 
             <div className="profile-container mx-auto max-w-4xl p-6 bg-white shadow-lg rounded-lg mt-8">
                 <div className="flex justify-between items-center mb-6">

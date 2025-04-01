@@ -40,15 +40,15 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
 
     const handleLogout = async () => {
         try {
-          await axios.get('/api/users/logout', { withCredentials: true });
-          localStorage.removeItem('currentUser');
-          setCurrentUser(null); // update context
-          toast.success('Logged out successfully!');
-          navigate('/'); // this will trigger a re-render of Homepage
+            await axios.get('/api/users/logout', { withCredentials: true });
+            localStorage.removeItem('currentUser');
+            setCurrentUser(null); // update context
+            toast.success('Logged out successfully!');
+            navigate('/'); // this will trigger a re-render of Homepage
         } catch (err) {
-          toast.error('Logout failed');
+            toast.error('Logout failed');
         }
-      };
+    };
 
 
     return (
@@ -187,12 +187,12 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                 >
                                     <ul className="py-2 text-sm text-gray-700" aria-labelledby="dropdownHoverButton">
                                         <li>
-                                            <Link to="/users/profile" className="block px-4 py-2 hover:bg-gray-100">
+                                            <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">
                                                 Profile
                                             </Link>
                                         </li>
                                         <li>
-                                            <Link to="/users/settings" className="block px-4 py-2 hover:bg-gray-100">
+                                            <Link to="/settings" className="block px-4 py-2 hover:bg-gray-100">
                                                 Settings
                                             </Link>
                                         </li>

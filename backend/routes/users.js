@@ -7,10 +7,12 @@ const {
     logoutUser,
     getProfile,
     updateProfile,
-    updateSettings
+    updateSettings,
+    getCurrentUser
 } = require('../controllers/usersController');
 const {isLoggedIn} = require('../middleware/auth')
 
+router.get('/me', getCurrentUser);
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);

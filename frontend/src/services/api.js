@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 
 const api = axios.create({
     baseURL: 'http://localhost:3000/api',
-    withCredentials: true, // Update to match your server's port
+    withCredentials: true,
 });
 
 api.interceptors.response.use(
@@ -15,7 +15,7 @@ api.interceptors.response.use(
         }
         return Promise.reject(err);
     }
-); 
+);
 
 export const registerUser = (userData) => api.post('/users/register', userData);
 export const loginUser = (credentials) => api.post('/users/login', credentials);

@@ -7,8 +7,6 @@ import { toast } from 'react-toastify';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errorMsg, setErrorMsg] = useState(null);
-    const [successMsg, setSuccessMsg] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
     const { setCurrentUser, isLoggingOut } = useContext(AuthContext);
@@ -30,10 +28,8 @@ const Login = () => {
         return () => clearTimeout(timer);
     }, [location, isLoggingOut, navigate]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrorMsg(null);
         try {
             const response = await loginUser({ email, password });
             const { user, message } = response.data;
@@ -44,9 +40,7 @@ const Login = () => {
             navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            const msg = error.response?.data?.error || 'Login failed';
-            toast.error(msg);
-            setErrorMsg(msg);
+            toast.error(error.response?.data?.error || 'Login failed');
         }
     };
 

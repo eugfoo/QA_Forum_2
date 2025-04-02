@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
     const setCurrentUser = (userData) => {
         if (userData) {
             localStorage.setItem('currentUser', JSON.stringify(userData));
-            console.log('Updated currentUser in localStorage:', userData);
         }
         setCurrentUserState(userData);
     };
@@ -35,7 +34,6 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(null);
             return true;
         } catch (error) {
-            console.error('Error during logout:', error);
             return false;
         } finally {
             setIsLoggingOut(false);
@@ -62,8 +60,6 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('token');
                 setCurrentUser(null);
-            } else {
-                console.error('Failed to refresh session:', error);
             }
             return false;
         }

@@ -15,18 +15,13 @@ const ProfilePage = () => {
         const getUpdatedUser = async () => {
             try {
                 const res = await fetchCurrentUser();
-                console.log('Updated user data:', res.data.user);
-                console.log('Profile picture URL:', res.data.user.profilePic);
                 setCurrentUser(res.data.user);
             } catch (err) {
-                console.error('Failed to refresh user:', err);
+                // Silently fail
             }
         };
         getUpdatedUser();
     }, []);
-
-    console.log('Current user in Profile component:', currentUser);
-    console.log('Profile picture URL in render:', currentUser?.profilePic);
 
     return (
         <div>
@@ -38,7 +33,6 @@ const ProfilePage = () => {
                             alt="Profile Picture"
                             className="rounded-full w-24 h-24 object-cover"
                             onError={(e) => {
-                                console.error('Error loading profile image, using fallback');
                                 e.target.src = '/default-avatar.png';
                                 e.target.onerror = null;
                             }}

@@ -23,16 +23,11 @@ const QuestionList = ({ refreshKey }) => {
             try {
                 setFade(false);
                 setLoading(true);
-                console.log(`Fetching questions with filter=${filter}, view=${view}, search=${search} (attempt ${retryCount + 1})`);
                 const response = await fetchQuestions(filter, view, search);
-                console.log('Questions fetched successfully:', response.data.questions.length);
                 setQuestions(response.data.questions);
             } catch (err) {
-                console.error('Error fetching questions:', err);
-                
                 // Add retry logic for network errors
                 if (err.code === 'ERR_NETWORK' && retryCount < 2) {
-                    console.log(`Network error detected. Retrying in ${(retryCount + 1) * 1000}ms (attempt ${retryCount + 1}/3)`);
                     toast.info(`Connection issue. Retrying... (${retryCount + 1}/3)`);
                     
                     setTimeout(() => {
@@ -67,7 +62,6 @@ const QuestionList = ({ refreshKey }) => {
                 setQuestions(updatedQuestions.data.questions);
             }
         } catch (error) {
-            console.error('Error updating question:', error);
             toast.error(error.response?.data?.error || 'Failed to update question');
         }
     };
@@ -81,7 +75,6 @@ const QuestionList = ({ refreshKey }) => {
                 setQuestions(updatedQuestions.data.questions);
             }
         } catch (error) {
-            console.error('Error toggling question lock:', error);
             toast.error('Failed to update question lock status');
         }
     };
@@ -93,7 +86,6 @@ const QuestionList = ({ refreshKey }) => {
             const response = await fetchQuestions(filter, view);
             setQuestions(response.data.questions);
         } catch (error) {
-            console.error('Error deleting question:', error);
             toast.error('Failed to delete question');
         }
     };
@@ -106,7 +98,6 @@ const QuestionList = ({ refreshKey }) => {
             const updatedQuestions = await fetchQuestions(filter, view);
             setQuestions(updatedQuestions.data.questions);
         } catch (error) {
-            console.error('Error voting:', error);
             toast.error('Failed to vote');
         }
     };

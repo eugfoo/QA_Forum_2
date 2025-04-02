@@ -7,8 +7,6 @@ const EditProfileForm = ({ user, onSubmit }) => {
     const profilePhotoRef = useRef();
 
     useEffect(() => {
-        console.log('EditProfileForm received user:', user);
-        console.log('User profile pic:', user.profilePic);
         // Update preview if user data changes
         setProfilePreview(user.profilePic || '/default-avatar.png');
     }, [user]);
@@ -18,7 +16,6 @@ const EditProfileForm = ({ user, onSubmit }) => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                console.log('Setting preview to data URL');
                 setProfilePreview(reader.result);
             };
             reader.readAsDataURL(file);

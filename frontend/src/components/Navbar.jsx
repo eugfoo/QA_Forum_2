@@ -37,11 +37,8 @@ const Navbar = () => {
                 // Mark notifications as read when closing the dropdown
                 if (notificationCount > 0) {
                     try {
-                        console.log('Attempting to mark notifications as read on dropdown close...');
-                        
                         // Mark all notifications as read in the API
                         const response = await api.put('/users/notifications/read', {});
-                        console.log('Mark as read response:', response.data);
                         
                         // Update the notification count after API call succeeds
                         setNotificationCount(0);
@@ -49,9 +46,6 @@ const Navbar = () => {
                         // Update the notification objects in state to show as read
                         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
                     } catch (error) {
-                        console.error('Error marking notifications as read:', error);
-                        console.error('Error details:', error.response?.data || 'No response data');
-                        
                         // If API call fails, restore the notification count
                         fetchNotifications();
                         
@@ -100,10 +94,8 @@ const Navbar = () => {
             
             // Count unread notifications
             const unreadCount = notificationsData.filter(n => n.read === false).length;
-            console.log(`Found ${unreadCount} unread notifications out of ${notificationsData.length} total`);
             setNotificationCount(unreadCount);
         } catch (error) {
-            console.error('Error fetching notifications:', error);
             // Reset notifications to empty array in case of error
             setNotifications([]);
             setNotificationCount(0);
@@ -117,8 +109,8 @@ const Navbar = () => {
             const logoutSuccess = await logout();
             if (logoutSuccess) {
                 // Attempt the backend logout but catch errors so they don't trigger an error toast
-                await axios.get('/api/users/logout', { withCredentials: true }).catch(error => {
-                    console.error('Backend logout failed, but ignoring since user is already logged out.', error);
+                await axios.get('/api/users/logout', { withCredentials: true }).catch(() => {
+                    // Silently fail - we're logging out anyway
                 });
 
                 navigate('/login');
@@ -127,7 +119,6 @@ const Navbar = () => {
                 toast.error('Failed to log out. Please try again.');
             }
         } catch (err) {
-            console.error('Logout failed:', err);
             toast.error('Logout failed. Please try again.');
         }
     };
@@ -279,7 +270,6 @@ const Navbar = () => {
                                         alt="Profile"
                                         className="w-6 h-6 rounded-full object-cover mr-2 bg-gray-200"
                                         onError={(e) => {
-                                            console.log('Using default avatar due to image load error');
                                             e.target.src = '/default-avatar.png';
                                             e.target.onerror = null; // Prevent infinite error loop
                                         }}
@@ -301,8 +291,6 @@ const Navbar = () => {
                                         />
                                     </svg>
                                 </button>
-                                {/* For simplicity, this dropdown is always visible on hover.
-                    You could convert this to a controlled component if needed. */}
                                 <div
                                     id="dropdownHover"
                                     className="absolute z-10 hidden group-hover:block bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44"

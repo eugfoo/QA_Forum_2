@@ -46,7 +46,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
             sortAnswers(sortedAnswers);
             setAnswers(sortedAnswers);
         } catch (error) {
-            console.error('Error fetching answers:', error);
             toast.error('Failed to load answers');
         } finally {
             setLoading(false);
@@ -77,7 +76,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
             toast.success('Vote recorded successfully');
             fetchAnswers();
         } catch (error) {
-            console.error('Error voting:', error);
             toast.error(error.response?.data?.error || 'Failed to record vote');
         }
     };
@@ -88,7 +86,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
             toast.success('Answer deleted successfully');
             fetchAnswers();
         } catch (error) {
-            console.error('Error deleting answer:', error);
             toast.error(error.response?.data?.error || 'Failed to delete answer');
         }
     };
@@ -99,7 +96,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
             toast.success('Answer updated successfully');
             fetchAnswers();
         } catch (error) {
-            console.error('Error updating answer:', error);
             toast.error(error.response?.data?.error || 'Failed to update answer');
         }
     };

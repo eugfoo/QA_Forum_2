@@ -22,7 +22,6 @@ const EditProfile = () => {
         
         try {
             const response = await updateUserProfile(formData);
-            console.log('Profile update response:', response.data);
             
             // Update the current user with the new profile data
             if (response.data && response.data.user) {
@@ -33,7 +32,6 @@ const EditProfile = () => {
                 };
                 
                 setCurrentUser(userData);
-                console.log('Updated current user in context:', userData);
                 
                 toast.success('Profile updated successfully!');
                 navigate('/profile');
@@ -41,8 +39,6 @@ const EditProfile = () => {
                 throw new Error('Invalid response format');
             }
         } catch (err) {
-            console.error('Error updating profile:', err);
-            
             const errorMessage = err.response?.data?.error || 'Failed to update profile';
             setError(errorMessage);
             

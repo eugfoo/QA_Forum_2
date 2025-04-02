@@ -30,7 +30,6 @@ const QuestionDetails = () => {
             const response = await getQuestion(id);
             setQuestion(response.data);
         } catch (error) {
-            console.error('Error fetching question:', error);
             toast.error('Failed to load question');
         } finally {
             setLoading(false);
@@ -49,7 +48,6 @@ const QuestionDetails = () => {
                 toast.error(data.message || 'Failed to record vote');
             }
         } catch (error) {
-            console.error('Error voting:', error);
             toast.error('Failed to record vote');
         }
     };
@@ -74,7 +72,6 @@ const QuestionDetails = () => {
                 toast.error(data.message || 'Failed to update question');
             }
         } catch (error) {
-            console.error('Error updating question:', error);
             toast.error('Failed to update question');
         }
     };
@@ -90,7 +87,6 @@ const QuestionDetails = () => {
                 toast.error(data.message || 'Failed to delete question');
             }
         } catch (error) {
-            console.error('Error deleting question:', error);
             toast.error('Failed to delete question');
         }
     };
@@ -106,7 +102,6 @@ const QuestionDetails = () => {
                 toast.error(`Failed to ${isLocked ? 'unlock' : 'lock'} question`);
             }
         } catch (error) {
-            console.error('Error locking/unlocking question:', error);
             toast.error(`Failed to ${isLocked ? 'unlock' : 'lock'} question`);
         }
     };

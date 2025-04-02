@@ -9,19 +9,13 @@ const api = axios.create({
 // Add token to requests if available
 api.interceptors.request.use(
     config => {
-        console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`);
-        
         const token = localStorage.getItem('token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
-            console.log(`Added token to request: ${config.url}`);
-        } else {
-            console.log(`No token available for request: ${config.url}`);
         }
         return config;
     },
     error => {
-        console.error('Request error:', error);
         return Promise.reject(error);
     }
 );
@@ -45,8 +39,6 @@ api.interceptors.response.use(
             config._retryCount++;
             
             const delayMs = config._retryCount * 1000; // Exponential backoff
-            
-            console.log(`Network error for ${config.url}. Retry ${config._retryCount}/3 after ${delayMs}ms`);
             
             // Wait before retrying
             await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -113,27 +105,12 @@ export const lockQuestion = (questionId) => api.post(`/questions/${questionId}/l
 export const unlockQuestion = (questionId) => api.post(`/questions/${questionId}/unlock`);
 // Question-related calls
 export const fetchQuestions = (filter = 'latest', view = 'general', search = '') => {
-    console.log(`Attempting to fetch questions: filter=${filter}, view=${view}, search=${search}`);
     let url = `/questions?filter=${filter}&view=${view}`;
     if (search) {
         url += `&search=${encodeURIComponent(search)}`;
     }
     
-    return api.get(url)
-        .then(response => {
-            console.log(`Successfully fetched ${response.data.questions?.length || 0} questions`);
-            return response;
-        })
-        .catch(error => {
-            console.error(`Error fetching questions:`, error.message);
-            if (error.code === 'ERR_NETWORK') {
-                console.error('Network error details:', {
-                    url: `${api.defaults.baseURL}/questions?filter=${filter}&view=${view}`,
-                    method: 'GET'
-                });
-            }
-            throw error;
-        });
+    return api.get(url);
 };
 
 // Answer-related API functions
@@ -145,15 +122,7 @@ export const deleteAnswer = (answerId) => api.get(`/answers/${answerId}/delete`)
 
 // Activity timeline
 export const fetchUserActivity = (page = 1) => {
-    return api.get(`/users/profile?page=${page}`)
-        .then(response => {
-            console.log(`Successfully fetched user activity for page ${page}`);
-            return response;
-        })
-        .catch(error => {
-            console.error('Error fetching user activity:', error);
-            throw error;
-        });
+    return api.get(`/users/profile?page=${page}`);
 };
 
 export default api;

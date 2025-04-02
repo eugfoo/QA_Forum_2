@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { voteQuestion, deleteQuestion, getQuestion } from '../services/api';
+import { voteQuestion, deleteQuestion, getQuestion, unlockQuestion, lockQuestion } from '../services/api';
 import { toast } from 'react-toastify';
 import AnswerList from '../components/AnswerList';
 import AnswerForm from '../components/AnswerForm';
@@ -95,15 +95,13 @@ const QuestionDetails = () => {
 
     const handleLock = async (isLocked) => {
         try {
-            const response = await fetch(`/api/questions/${id}/${isLocked ? 'unlock' : 'lock'}`, {
-                method: 'POST',
-            });
-            if (response.ok) {
+            const response = await (isLocked ? unlockQuestion(id) : lockQuestion(id));
+            
+            if (response.status === 200) {
                 toast.success(`Question ${isLocked ? 'unlocked' : 'locked'} successfully`);
                 fetchQuestion();
             } else {
-                const data = await response.json();
-                toast.error(data.message || `Failed to ${isLocked ? 'unlock' : 'lock'} question`);
+                toast.error(`Failed to ${isLocked ? 'unlock' : 'lock'} question`);
             }
         } catch (error) {
             console.error('Error locking/unlocking question:', error);

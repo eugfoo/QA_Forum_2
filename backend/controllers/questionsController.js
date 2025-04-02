@@ -10,8 +10,8 @@ const fetchAllQuestions = async (req, res, next) => {
         console.log("sadada: " + filter);
 
         let query = {};
-        if (view === 'myProfile' && req.session?.user) {
-            query.user = req.session.user._id;
+        if (view === 'myProfile' && req.user) {
+            query.user = req.user._id;
         }
 
         let questions = await Question.find(query)
@@ -41,11 +41,13 @@ const createQuestion = async (req, res) => {
     try {
         let { title, body, tags } = req.body;
 
-        if (!req.session.user) {
+        if (!req.user) {
+            console.log('Unauthorized: No user in request for createQuestion');
             return res.status(401).json({ error: 'Unauthorized. Please log in.' });
         }
 
-        const userId = req.session.user._id;
+        const userId = req.user._id;
+        console.log(`Creating question for user ID: ${userId}`);
 
         tags = typeof tags === 'string'
             ? tags.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -55,13 +57,14 @@ const createQuestion = async (req, res) => {
         await question.save();
 
         await User.findByIdAndUpdate(userId, { $inc: { questionsPostedCount: 1 } });
+        console.log(`Question created with ID: ${question._id}`);
 
         res.status(201).json({
             message: 'Question posted successfully!',
             question,
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error in createQuestion:', err);
         res.status(500).json({ error: 'An error occurred while posting the question.' });
     }
 };
@@ -128,7 +131,7 @@ const updateQuestion = async (req, res) => {
         const { id } = req.params;
         const { title, body, tags } = req.body;
 
-        if (!req.session.user) {
+        if (!req.user) {
             return res.status(401).json({ error: 'Unauthorized. Please log in.' });
         }
 
@@ -137,7 +140,7 @@ const updateQuestion = async (req, res) => {
             return res.status(404).json({ error: 'Question not found.' });
         }
 
-        if (question.user.toString() !== req.session.user._id.toString()) {
+        if (question.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized to edit this question.' });
         }
 
@@ -171,7 +174,11 @@ const deleteQuestion = async (req, res) => {
             return res.status(404).json({ error: 'Question not found.' });
         }
 
-        if (question.user.toString() !== req.session.user._id.toString()) {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+        }
+
+        if (question.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized to delete this question.' });
         }
 
@@ -208,10 +215,12 @@ const voteForQuestion = async (req, res) => {
     try {
         const { id } = req.params;
         const { voteType } = req.body; // Expected values: 'up' or 'down'
-        const userId = req.session.user && req.session.user._id;
-        if (!userId) {
+        
+        if (!req.user) {
             return res.status(401).json({ error: 'User not logged in.' });
         }
+        
+        const userId = req.user._id;
 
         const question = await Question.findById(id);
         if (!question) {
@@ -272,18 +281,31 @@ const voteForQuestion = async (req, res) => {
 const lockQuestion = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        if (!req.user) {
+            console.log('Unauthorized: No user in request for lockQuestion');
+            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+        }
+        
+        console.log(`Attempting to lock question ${id} by user ${req.user._id}`);
+        
         const question = await Question.findById(id);
         if (!question) {
+            console.log(`Question not found with ID: ${id}`);
             return res.status(404).json({ error: 'Question not found.' });
         }
-        if (question.user.toString() !== req.session.user._id.toString()) {
+        
+        if (question.user.toString() !== req.user._id.toString()) {
+            console.log(`Unauthorized: User ${req.user._id} attempted to lock question owned by ${question.user}`);
             return res.status(403).json({ error: 'Not authorized to lock this question.' });
         }
+        
         question.locked = true;
         await question.save();
+        console.log(`Question ${id} successfully locked`);
         res.status(200).json({ message: 'Question locked successfully.' });
     } catch (err) {
-        console.error('Error locking question:', err);
+        console.error('Error in lockQuestion:', err);
         res.status(500).json({ error: 'Error locking the question.' });
     }
 };
@@ -291,18 +313,31 @@ const lockQuestion = async (req, res) => {
 const unlockQuestion = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        if (!req.user) {
+            console.log('Unauthorized: No user in request for unlockQuestion');
+            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+        }
+        
+        console.log(`Attempting to unlock question ${id} by user ${req.user._id}`);
+        
         const question = await Question.findById(id);
         if (!question) {
+            console.log(`Question not found with ID: ${id}`);
             return res.status(404).json({ error: 'Question not found.' });
         }
-        if (question.user.toString() !== req.session.user._id.toString()) {
+        
+        if (question.user.toString() !== req.user._id.toString()) {
+            console.log(`Unauthorized: User ${req.user._id} attempted to unlock question owned by ${question.user}`);
             return res.status(403).json({ error: 'Not authorized to unlock this question.' });
         }
+        
         question.locked = false;
         await question.save();
+        console.log(`Question ${id} successfully unlocked`);
         res.status(200).json({ message: 'Question unlocked successfully.' });
     } catch (err) {
-        console.error('Error unlocking question:', err);
+        console.error('Error in unlockQuestion:', err);
         res.status(500).json({ error: 'Error unlocking the question.' });
     }
 };

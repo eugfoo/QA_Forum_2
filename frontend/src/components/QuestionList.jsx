@@ -18,15 +18,36 @@ const QuestionList = ({ refreshKey }) => {
     const [fade, setFade] = useState(false);
 
     useEffect(() => {
-        const getQuestions = async () => {
+        const getQuestions = async (retryCount = 0) => {
             try {
                 setFade(false);
                 setLoading(true);
+                console.log(`Fetching questions with filter=${filter}, view=${view} (attempt ${retryCount + 1})`);
                 const response = await fetchQuestions(filter, view);
+                console.log('Questions fetched successfully:', response.data.questions.length);
                 setQuestions(response.data.questions);
             } catch (err) {
                 console.error('Error fetching questions:', err);
-                toast.error('Failed to fetch questions');
+                
+                // Add retry logic for network errors
+                if (err.code === 'ERR_NETWORK' && retryCount < 2) {
+                    console.log(`Network error detected. Retrying in ${(retryCount + 1) * 1000}ms (attempt ${retryCount + 1}/3)`);
+                    toast.info(`Connection issue. Retrying... (${retryCount + 1}/3)`);
+                    
+                    setTimeout(() => {
+                        getQuestions(retryCount + 1);
+                    }, (retryCount + 1) * 1000);
+                    return;
+                }
+                
+                // Show appropriate error based on error type
+                if (err.code === 'ERR_NETWORK') {
+                    toast.error('Network error: Could not connect to the server. Please check your connection.');
+                } else if (err.response?.status === 401) {
+                    toast.error('Authentication required. Please log in again.');
+                } else {
+                    toast.error(`Failed to fetch questions: ${err.message || 'Unknown error'}`);
+                }
             } finally {
                 setLoading(false);
                 setTimeout(() => setFade(true), 50);

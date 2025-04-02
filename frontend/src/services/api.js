@@ -3,19 +3,25 @@ import { toast } from 'react-toastify';
 
 const api = axios.create({
     baseURL: 'http://localhost:3000/api',
-    // Remove withCredentials as we'll use Authorization header instead
+    timeout: 10000, // 10 second timeout
 });
 
 // Add token to requests if available
 api.interceptors.request.use(
     config => {
+        console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`);
+        
         const token = localStorage.getItem('token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+            console.log(`Added token to request: ${config.url}`);
+        } else {
+            console.log(`No token available for request: ${config.url}`);
         }
         return config;
     },
     error => {
+        console.error('Request error:', error);
         return Promise.reject(error);
     }
 );
@@ -24,18 +30,40 @@ api.interceptors.request.use(
 let lastAuthErrorTime = 0;
 const AUTH_ERROR_COOLDOWN = 5000; // 5 seconds cooldown between auth error toasts
 
+// Add retry mechanism for network errors
+let retryCount = new Map();
+
 api.interceptors.response.use(
     res => res,
-    err => {
-        // Don't show error toast or redirect for session refresh requests
-        const isSessionRefresh = err.config?.url?.includes('/users/me');
-        const currentTime = Date.now();
+    async err => {
+        const config = err.config;
         
-        if (err.response?.status === 401 && !isSessionRefresh) {
-            // Only show toast and redirect if we haven't done so recently
-            if (currentTime - lastAuthErrorTime > AUTH_ERROR_COOLDOWN) {
+        // Network error retry logic
+        if (err.code === 'ERR_NETWORK' && (!config._retryCount || config._retryCount < 2)) {
+            // Initialize retry count for this request if needed
+            config._retryCount = config._retryCount || 0;
+            config._retryCount++;
+            
+            const delayMs = config._retryCount * 1000; // Exponential backoff
+            
+            console.log(`Network error for ${config.url}. Retry ${config._retryCount}/3 after ${delayMs}ms`);
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            
+            // Retry the request
+            return api(config);
+        }
+        
+        // Handle auth errors
+        if (err.response?.status === 401) {
+            // Don't show error toast or redirect for session refresh requests
+            const isSessionRefresh = config?.url?.includes('/users/me');
+            const currentTime = Date.now();
+            
+            if (!isSessionRefresh && (currentTime - lastAuthErrorTime > AUTH_ERROR_COOLDOWN)) {
                 lastAuthErrorTime = currentTime;
-                toast.error(err.response.data.error || 'Please log in to continue.');
+                toast.error(err.response.data?.error || 'Please log in to continue.');
                 
                 // Clear token on auth error
                 localStorage.removeItem('token');
@@ -47,6 +75,7 @@ api.interceptors.response.use(
                 }
             }
         }
+        
         return Promise.reject(err);
     }
 );
@@ -73,8 +102,24 @@ export const voteQuestion = (questionId, voteType) => api.post(`/questions/${que
 export const lockQuestion = (questionId) => api.post(`/questions/${questionId}/lock`);
 export const unlockQuestion = (questionId) => api.post(`/questions/${questionId}/unlock`);
 // Question-related calls
-export const fetchQuestions = (filter = 'latest', view = 'general') =>
-    api.get(`/questions?filter=${filter}&view=${view}`);
+export const fetchQuestions = (filter = 'latest', view = 'general') => {
+    console.log(`Attempting to fetch questions: filter=${filter}, view=${view}`);
+    return api.get(`/questions?filter=${filter}&view=${view}`)
+        .then(response => {
+            console.log(`Successfully fetched ${response.data.questions?.length || 0} questions`);
+            return response;
+        })
+        .catch(error => {
+            console.error(`Error fetching questions:`, error.message);
+            if (error.code === 'ERR_NETWORK') {
+                console.error('Network error details:', {
+                    url: `${api.defaults.baseURL}/questions?filter=${filter}&view=${view}`,
+                    method: 'GET'
+                });
+            }
+            throw error;
+        });
+};
 
 // Answer-related API functions
 export const getAnswers = (questionId) => api.get(`/questions/${questionId}/answers`);

@@ -49,16 +49,19 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
+    console.log('Login attempt for:', email);
     try {
         const user = await User.findOne({ email });
         if (!user || !(await user.comparePassword(password))) {
+            console.log('Login failed: Invalid credentials');
             return res.status(401).json({ error: 'Invalid email or password' });
         }
         
         // Generate JWT token
         const token = generateToken(user._id);
+        console.log('Login successful, generated token:', token.substring(0, 20) + '...');
         
-        return res.status(200).json({ 
+        const response = { 
             message: 'Login successful', 
             user: {
                 _id: user._id,
@@ -69,8 +72,11 @@ const loginUser = async (req, res) => {
                 profilePic: user.profilePic
             },
             token
-        });
+        };
+        console.log('Response structure:', Object.keys(response));
+        return res.status(200).json(response);
     } catch (err) {
+        console.error('Login error:', err.message);
         return res.status(500).json({ error: err.message });
     }
 };
@@ -117,6 +123,38 @@ const getCurrentUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        // Get questions and answers count
+        const Question = require('../models/Question');
+        const Answer = require('../models/Answer');
+
+        const [questionsCount, answersCount, questions] = await Promise.all([
+            Question.countDocuments({ user: user._id }),
+            Answer.countDocuments({ user: user._id }),
+            Question.find({ user: user._id }) // To calculate upvotes
+        ]);
+
+        // Calculate total upvotes received on questions
+        let totalUpvotes = 0;
+        if (questions.length > 0) {
+            totalUpvotes = questions.reduce((total, question) => {
+                // Calculate net upvotes (upvotes - downvotes)
+                const questionUpvotes = (question.upvotes || []).length;
+                const questionDownvotes = (question.downvotes || []).length;
+                return total + (questionUpvotes - questionDownvotes);
+            }, 0);
+        }
+
+        // Get answers to calculate upvotes on answers
+        const answers = await Answer.find({ user: user._id });
+        if (answers.length > 0) {
+            const answerUpvotes = answers.reduce((total, answer) => {
+                const upvotes = (answer.upvotes || []).length;
+                const downvotes = (answer.downvotes || []).length;
+                return total + (upvotes - downvotes);
+            }, 0);
+            totalUpvotes += answerUpvotes;
+        }
+
         res.json({ 
             user: {
                 _id: user._id,
@@ -124,7 +162,10 @@ const getCurrentUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 bio: user.bio,
-                profilePic: user.profilePic
+                profilePic: user.profilePic,
+                questionsPostedCount: questionsCount,
+                questionsAnsweredCount: answersCount,
+                upvotesReceived: totalUpvotes
             }
         });
     } catch (err) {

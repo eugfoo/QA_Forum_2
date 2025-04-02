@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const Navbar = ({ notifications: initialNotifications = [] }) => {
-    const { currentUser, setCurrentUser } = useContext(AuthContext);
+    const { currentUser, logout, setLogoutInProgress } = useContext(AuthContext);
     const navigate = useNavigate();
     // State for notifications dropdown
     const [isNotiOpen, setIsNotiOpen] = useState(false);
@@ -40,12 +40,18 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
 
     const handleLogout = async () => {
         try {
+            toast.success('You have been logged out.');
+            // Trigger logout in context (this sets logoutInProgress)
+            logout();
+
+            // Call backend logout route
             await axios.get('/api/users/logout', { withCredentials: true });
-            localStorage.removeItem('currentUser');
-            setCurrentUser(null); // update context
-            toast.success('Logged out successfully!');
-            navigate('/'); // this will trigger a re-render of Homepage
+
+            navigate('/login');
+            // Optionally, reset logoutInProgress after navigation if needed:
+            setLogoutInProgress(false);
         } catch (err) {
+            console.error('Logout failed:', err);
             toast.error('Logout failed');
         }
     };

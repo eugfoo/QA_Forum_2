@@ -1,24 +1,30 @@
-// src/components/PrivateRoute.jsx
-import React, { useContext, useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
+// PrivateRoute.jsx
+import React, { useContext, useEffect, useRef } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 
-const PrivateRoute = ({ children }) => {
-    const { currentUser } = useContext(AuthContext);
-
-    const navigate = useNavigate();
+const PrivateRoute = () => {
+    const { currentUser, logoutInProgress } = useContext(AuthContext);
+    const location = useLocation();
+    const hasShownToast = useRef(false);
 
     useEffect(() => {
-        if (!currentUser) {
-            toast.error('Please log in to access this page');
-            setTimeout(() => {
-                navigate('/login');
-            }, 100); // Give toast time to appear
+        if (
+            !currentUser &&
+            !logoutInProgress &&
+            location.pathname !== '/login' &&
+            !hasShownToast.current
+        ) {
+            toast.error('Please log in to continue.');
+            hasShownToast.current = true;
         }
-    }, [currentUser, navigate]);
+    }, [currentUser, logoutInProgress, location.pathname]);
 
-    if (!currentUser) return null;
+    if (!currentUser) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
     return <Outlet />;
 };
 

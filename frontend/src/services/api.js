@@ -26,5 +26,10 @@ export const fetchQuestions = (filter = 'latest', view = 'general') =>
     api.get(`/questions?filter=${filter}&view=${view}`);
 export const createQuestion = (questionData) => api.post('/questions', questionData);
 
+// Question actions
+export const editQuestion = (questionId, data) => api.put(`/questions/${questionId}`, data);
+export const lockQuestion = (questionId) => api.put(`/questions/${questionId}/lock`);
+export const unlockQuestion = (questionId) => api.put(`/questions/${questionId}/unlock`);
+export const deleteQuestion = (questionId) => api.delete(`/questions/${questionId}`);
 
 export default api;

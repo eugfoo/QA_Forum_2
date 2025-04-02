@@ -31,7 +31,7 @@ router.get('/:id', getQuestionDetails);
 router.put('/:id', updateQuestion);
 
 // Delete a question
-router.delete('/:id', deleteQuestion);
+router.delete('/:id', isLoggedIn, deleteQuestion);
 
 // Vote for a question
 router.post('/:id/vote', voteForQuestion);

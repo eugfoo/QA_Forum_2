@@ -149,13 +149,11 @@ const deleteQuestion = async (req, res) => {
     try {
         const question = await Question.findById(req.params.id);
         if (!question) {
-            req.flash('error_msg', 'Question not found.');
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Question not found.' });
         }
 
         if (question.user.toString() !== req.session.user._id.toString()) {
-            req.flash('error_msg', 'Not authorized to delete this question.');
-            return res.redirect('back');
+            return res.status(403).json({ error: 'Not authorized to delete this question.' });
         }
 
         const answers = await Answer.find({ question: question._id });
@@ -179,11 +177,10 @@ const deleteQuestion = async (req, res) => {
             }
         });
 
-        req.flash('success_msg', 'Question deleted successfully.');
-        res.redirect('/');
+        res.status(200).json({ message: 'Question deleted successfully.' });
     } catch (err) {
-        req.flash('error_msg', 'Error deleting question.');
-        res.redirect('back');
+        console.error('Error deleting question:', err);
+        res.status(500).json({ error: 'Error deleting question.' });
     }
 };
 

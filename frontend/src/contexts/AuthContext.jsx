@@ -8,18 +8,22 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('currentUser');
         return storedUser ? JSON.parse(storedUser) : null;
     });
-    const [justLoggedOut, setJustLoggedOut] = useState(false);
-    const [logoutRedirect, setLogoutRedirect] = useState(false);
-    const [logoutInProgress, setLogoutInProgress] = useState(false);
-
-    const logout = () => {
-        localStorage.removeItem('currentUser');
-        setCurrentUser(null);
-        setJustLoggedOut(true);
-        setLogoutInProgress(true);
-    };
-
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const logout = async () => {
+        try {
+            setIsLoggingOut(true);
+            localStorage.removeItem('currentUser');
+            setCurrentUser(null);
+            return true;
+        } catch (error) {
+            console.error('Error during logout:', error);
+            return false;
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
 
     useEffect(() => {
         const storedUser = localStorage.getItem('currentUser');
@@ -35,12 +39,7 @@ export const AuthProvider = ({ children }) => {
                 currentUser,
                 setCurrentUser,
                 logout,
-                justLoggedOut,
-                logoutRedirect,
-                setJustLoggedOut,
-                setLogoutRedirect,
-                logoutInProgress,
-                setLogoutInProgress,
+                isLoggingOut,
             }}
         >
             {!loading && children}

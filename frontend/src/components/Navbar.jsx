@@ -40,21 +40,24 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
 
     const handleLogout = async () => {
         try {
-            toast.success('You have been logged out.');
-            // Trigger logout in context (this sets logoutInProgress)
-            logout();
+            const logoutSuccess = await logout();
+            if (logoutSuccess) {
+                // Attempt the backend logout but catch errors so they don't trigger an error toast
+                await axios.get('/api/users/logout', { withCredentials: true }).catch(error => {
+                    console.error('Backend logout failed, but ignoring since user is already logged out.', error);
+                });
 
-            // Call backend logout route
-            await axios.get('/api/users/logout', { withCredentials: true });
-
-            navigate('/login');
-            // Optionally, reset logoutInProgress after navigation if needed:
-            setLogoutInProgress(false);
+                navigate('/login');
+                toast.success('You have been logged out.');
+            } else {
+                toast.error('Failed to log out. Please try again.');
+            }
         } catch (err) {
             console.error('Logout failed:', err);
-            toast.error('Logout failed');
+            toast.error('Logout failed. Please try again.');
         }
     };
+
 
 
     return (

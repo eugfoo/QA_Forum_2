@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { loginUser } from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -10,7 +10,24 @@ const Login = () => {
     const [errorMsg, setErrorMsg] = useState(null);
     const [successMsg, setSuccessMsg] = useState(null);
     const navigate = useNavigate();
-    const { setCurrentUser } = useContext(AuthContext);
+    const location = useLocation();
+    const { setCurrentUser, isLoggingOut } = useContext(AuthContext);
+    const hasShownToast = useRef(false);
+
+    useEffect(() => {
+        // Reset hasShownToast when location changes
+        hasShownToast.current = false;
+
+        // Use a timeout to check isLoggingOut state after a short delay
+        const timer = setTimeout(() => {
+            if (!isLoggingOut && location.state?.from && !hasShownToast.current) {
+                toast.error('Please log in to continue.');
+                hasShownToast.current = true;
+            }
+        }, 100); // Small delay to ensure state is updated
+
+        return () => clearTimeout(timer);
+    }, [location, isLoggingOut]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

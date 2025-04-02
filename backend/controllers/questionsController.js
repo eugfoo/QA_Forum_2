@@ -124,23 +124,39 @@ const updateQuestion = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, body, tags } = req.body;
+
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+        }
+
         const question = await Question.findById(id);
+        if (!question) {
+            return res.status(404).json({ error: 'Question not found.' });
+        }
+
+        if (question.user.toString() !== req.session.user._id.toString()) {
+            return res.status(403).json({ error: 'Not authorized to edit this question.' });
+        }
+
         if (question.locked) {
-            req.flash('error_msg', 'This question is locked and cannot be edited.');
-            return res.redirect('back');
+            return res.status(403).json({ error: 'This question is locked and cannot be edited.' });
         }
 
         question.title = title;
         question.body = body;
         question.tags = typeof tags === 'string'
             ? tags.split(',').map(tag => tag.trim()).filter(Boolean)
-            : [];
+            : tags;
+
         await question.save();
-        req.flash('success_msg', 'Question updated successfully.');
-        res.redirect('/questions/' + id);
+
+        res.status(200).json({
+            message: 'Question updated successfully.',
+            question
+        });
     } catch (err) {
-        req.flash('error_msg', 'Error updating question.');
-        res.redirect('back');
+        console.error('Error updating question:', err);
+        res.status(500).json({ error: 'Error updating question.' });
     }
 };
 
@@ -240,20 +256,17 @@ const lockQuestion = async (req, res) => {
         const { id } = req.params;
         const question = await Question.findById(id);
         if (!question) {
-            req.flash('error_msg', 'Question not found.');
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Question not found.' });
         }
         if (question.user.toString() !== req.session.user._id.toString()) {
-            req.flash('error_msg', 'Not authorized to lock this question.');
-            return res.redirect('back');
+            return res.status(403).json({ error: 'Not authorized to lock this question.' });
         }
         question.locked = true;
         await question.save();
-        req.flash('success_msg', 'Successfully locked');
-        res.redirect('back');
+        res.status(200).json({ message: 'Question locked successfully.' });
     } catch (err) {
-        req.flash('error_msg', 'Error locking the question.');
-        res.redirect('back');
+        console.error('Error locking question:', err);
+        res.status(500).json({ error: 'Error locking the question.' });
     }
 };
 
@@ -262,20 +275,17 @@ const unlockQuestion = async (req, res) => {
         const { id } = req.params;
         const question = await Question.findById(id);
         if (!question) {
-            req.flash('error_msg', 'Question not found.');
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Question not found.' });
         }
         if (question.user.toString() !== req.session.user._id.toString()) {
-            req.flash('error_msg', 'Not authorized to unlock this question.');
-            return res.redirect('back');
+            return res.status(403).json({ error: 'Not authorized to unlock this question.' });
         }
         question.locked = false;
         await question.save();
-        req.flash('success_msg', 'Question unlocked successfully.');
-        res.redirect('back');
+        res.status(200).json({ message: 'Question unlocked successfully.' });
     } catch (err) {
-        req.flash('error_msg', 'Error unlocking the question.');
-        res.redirect('back');
+        console.error('Error unlocking question:', err);
+        res.status(500).json({ error: 'Error unlocking the question.' });
     }
 };
 

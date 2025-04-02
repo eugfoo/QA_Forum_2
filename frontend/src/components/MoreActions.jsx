@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import EditQuestionModal from './EditQuestionModal';
 
-const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionTitle }) => {
+const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionTitle, question }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
+        console.log('MoreActions - isLocked:', isLocked);
+        console.log('MoreActions - question:', question);
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
@@ -16,11 +20,11 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [isLocked, question]);
 
     const handleEdit = () => {
         setIsOpen(false);
-        onEdit();
+        setShowEditModal(true);
     };
 
     const handleLock = () => {
@@ -38,6 +42,15 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
             await onDelete();
         } finally {
             setShowDeleteModal(false);
+        }
+    };
+
+    const handleEditSave = async (editedData) => {
+        try {
+            await onEdit(editedData);
+            setShowEditModal(false);
+        } catch (error) {
+            console.error('Error saving edits:', error);
         }
     };
 
@@ -59,25 +72,27 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
 
                 {isOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                        <button
-                            onClick={handleEdit}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        >
-                            <svg
-                                className="w-4 h-4 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                        {!isLocked && (
+                            <button
+                                onClick={handleEdit}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                            </svg>
-                            Edit
-                        </button>
+                                <svg
+                                    className="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                </svg>
+                                Edit
+                            </button>
+                        )}
                         <button
                             onClick={handleLock}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -128,6 +143,13 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDeleteConfirm}
                 title={questionTitle}
+            />
+
+            <EditQuestionModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                onSave={handleEditSave}
+                question={question}
             />
         </>
     );

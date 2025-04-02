@@ -15,19 +15,21 @@ const Login = () => {
     const hasShownToast = useRef(false);
 
     useEffect(() => {
-        // Reset hasShownToast when location changes
+        // Reset the toast flag when location changes
         hasShownToast.current = false;
 
-        // Use a timeout to check isLoggingOut state after a short delay
         const timer = setTimeout(() => {
             if (!isLoggingOut && location.state?.from && !hasShownToast.current) {
                 toast.error('Please log in to continue.');
                 hasShownToast.current = true;
+                // Clear the location state after showing the toast
+                navigate('/login', { replace: true, state: {} });
             }
-        }, 100); // Small delay to ensure state is updated
+        }, 100);
 
         return () => clearTimeout(timer);
-    }, [location, isLoggingOut]);
+    }, [location, isLoggingOut, navigate]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();

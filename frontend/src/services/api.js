@@ -91,6 +91,11 @@ export const logout = () => {
 export const updateUser = (userId, data) => api.put(`/users/${userId}`, data);
 export const deleteUser = (userId) => api.delete(`/users/${userId}`);
 export const fetchCurrentUser = () => api.get('/users/me');
+export const updateUserProfile = (formData) => api.put('/users/profile', formData, {
+    headers: {
+        'Content-Type': 'multipart/form-data'
+    }
+});
 
 // Question-related API functions
 export const getQuestions = (filter = 'all', view = 'list') => api.get(`/questions?filter=${filter}&view=${view}`);

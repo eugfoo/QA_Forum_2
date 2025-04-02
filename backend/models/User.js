@@ -6,7 +6,7 @@ const UserSchema = new Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    profilePic: { type: String, default: '/image/default.jpeg' },
+    profilePic: { type: String, default: '/default-avatar.png' },
     bio: { type: String, default: '' },
     questionsPostedCount: { type: Number, default: 0 },
     questionsAnsweredCount: { type: Number, default: 0 },

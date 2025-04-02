@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import HomePage from './pages/Homepage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import EditProfile from './pages/EditProfile';
 import Loader from './components/Loader';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -34,6 +35,7 @@ const Layout = () => {
           <Route path="/questions/:id" element={<QuestionDetails />} />
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

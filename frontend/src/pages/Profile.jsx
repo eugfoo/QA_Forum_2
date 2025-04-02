@@ -7,6 +7,7 @@ import { fetchCurrentUser } from '../services/api'; // You'll define this
 const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg }) => {
 
     const { currentUser, setCurrentUser } = useContext(AuthContext); // ✅ fixed here
+    
     useEffect(() => {
         if (!currentUser) {
             return null; // or a loader
@@ -14,6 +15,8 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
         const getUpdatedUser = async () => {
             try {
                 const res = await fetchCurrentUser();
+                console.log('Updated user data:', res.data.user);
+                console.log('Profile picture URL:', res.data.user.profilePic);
                 setCurrentUser(res.data.user);
             } catch (err) {
                 console.error('Failed to refresh user:', err);
@@ -22,6 +25,9 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
         getUpdatedUser();
     }, []);
 
+    console.log('Current user in Profile component:', currentUser);
+    console.log('Profile picture URL in render:', currentUser?.profilePic);
+
     return (
         <div>
 
@@ -29,9 +35,14 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center">
                         <img
-                            src={currentUser.profilePic}
+                            src={`${currentUser.profilePic}?${new Date().getTime()}`}
                             alt="Profile Picture"
                             className="rounded-full w-24 h-24 object-cover"
+                            onError={(e) => {
+                                console.error('Error loading profile image, using fallback');
+                                e.target.src = '/default-avatar.png';
+                                e.target.onerror = null;
+                            }}
                         />
                         <div className="ml-6">
                             <h2 className="text-2xl font-semibold text-blue-600">{currentUser.username}</h2>
@@ -39,7 +50,7 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
                             <p className="mt-2 text-gray-700">{currentUser.bio}</p>
                         </div>
                     </div>
-                    <Link to="/users/edit" className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm">
+                    <Link to="/profile/edit" className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm">
                         Edit Profile
                     </Link>
                 </div>

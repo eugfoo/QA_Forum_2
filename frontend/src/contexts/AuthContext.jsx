@@ -5,16 +5,24 @@ import { fetchCurrentUser } from '../services/api';
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(() => {
+    const [currentUser, setCurrentUserState] = useState(() => {
         const storedUser = localStorage.getItem('currentUser');
         return storedUser ? JSON.parse(storedUser) : null;
     });
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // Wrapper for setCurrentUser that also updates localStorage
+    const setCurrentUser = (userData) => {
+        if (userData) {
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            console.log('Updated currentUser in localStorage:', userData);
+        }
+        setCurrentUserState(userData);
+    };
+
     // Function to handle login
     const login = (userData, token) => {
-        localStorage.setItem('currentUser', JSON.stringify(userData));
         localStorage.setItem('token', token);
         setCurrentUser(userData);
     };

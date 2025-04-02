@@ -177,6 +177,16 @@ const getCurrentUser = async (req, res) => {
 // Update the user's profile
 const updateProfile = async (req, res) => {
     try {
+        console.log('Update profile request:', {
+            body: req.body,
+            file: req.file ? { 
+                filename: req.file.filename,
+                path: req.file.path,
+                mimetype: req.file.mimetype,
+                size: req.file.size
+            } : 'No file uploaded'
+        });
+        
         const { username, bio } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ error: 'User not found' });
@@ -184,7 +194,10 @@ const updateProfile = async (req, res) => {
         user.username = username;
         user.bio = bio;
         if (req.file) {
-            user.profilePic = '/uploads/' + req.file.filename;
+            // Create a full URL for the profile picture
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            user.profilePic = `${baseUrl}/uploads/${req.file.filename}`;
+            console.log('Setting profile pic to:', user.profilePic);
         }
 
         await user.save();
@@ -201,6 +214,7 @@ const updateProfile = async (req, res) => {
             }
         });
     } catch (err) {
+        console.error('Profile update error:', err);
         return res.status(500).json({ error: err.message || 'Error updating profile' });
     }
 };

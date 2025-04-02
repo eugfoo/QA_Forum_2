@@ -167,9 +167,14 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                     type="button"
                                 >
                                     <img
-                                        src={currentUser.profilePic}
+                                        src={`${currentUser.profilePic}?${new Date().getTime()}`}
                                         alt="Profile"
                                         className="w-6 h-6 rounded-full object-cover mr-2"
+                                        onError={(e) => {
+                                            console.error('Error loading profile image in navbar, using fallback');
+                                            e.target.src = '/default-avatar.png';
+                                            e.target.onerror = null;
+                                        }}
                                     />
                                     <span className="truncate max-w-[80px]">{currentUser.username}</span>
                                     <svg

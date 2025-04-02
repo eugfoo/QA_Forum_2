@@ -11,6 +11,16 @@ const UserSchema = new Schema({
     questionsPostedCount: { type: Number, default: 0 },
     questionsAnsweredCount: { type: Number, default: 0 },
     upvotesReceived: { type: Number, default: 0 }
+}, { 
+    toJSON: { virtuals: true }, 
+    toObject: { virtuals: true }
+});
+
+// Virtual field for notifications
+UserSchema.virtual('notifications', {
+    ref: 'Notification',
+    localField: '_id',
+    foreignField: 'recipient'
 });
 
 UserSchema.pre('save', async function (next) {

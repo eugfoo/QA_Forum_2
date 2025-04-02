@@ -7,12 +7,14 @@ import HomePage from './pages/Homepage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
+import Settings from './pages/Settings';
 import Loader from './components/Loader';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PrivateRoute from './components/PrivateRoute';
 import NotFound from './pages/NotFound';
 import QuestionDetails from './pages/QuestionDetails';
+import Notifications from './pages/Notifications';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LoaderProvider, useLoader } from './contexts/LoaderContext';
@@ -36,6 +38,8 @@ const Layout = () => {
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

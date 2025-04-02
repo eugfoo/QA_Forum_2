@@ -10,7 +10,9 @@ const {
     getProfile,
     updateProfile,
     updateSettings,
-    getCurrentUser
+    getCurrentUser,
+    getNotifications,
+    markNotificationsAsRead
 } = require('../controllers/usersController');
 const { auth } = require('../middleware/auth');
 
@@ -51,5 +53,21 @@ router.get('/me', auth, getCurrentUser);
 router.get('/profile', auth, getProfile);
 router.put('/profile', auth, upload.single('profilePhoto'), updateProfile);
 router.put('/settings', auth, updateSettings);
+
+// Notification routes
+router.get('/notifications', auth, getNotifications);
+router.put('/notifications/read', auth, markNotificationsAsRead);
+
+// Test route for debugging auth
+router.get('/auth-test', auth, (req, res) => {
+    res.json({
+        message: 'Authentication successful',
+        user: {
+            id: req.user._id,
+            username: req.user.username,
+            email: req.user.email
+        }
+    });
+});
 
 module.exports = router;

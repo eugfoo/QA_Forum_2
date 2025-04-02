@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import MoreActions from './MoreActions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThumbsUp as faThumbsUpSolid, faThumbsDown as faThumbsDownSolid } from '@fortawesome/free-solid-svg-icons';
+import { faThumbsUp as faThumbsUpSolid, faThumbsDown as faThumbsDownSolid, faLock } from '@fortawesome/free-solid-svg-icons';
 import { faThumbsUp as faThumbsUpRegular, faThumbsDown as faThumbsDownRegular, faComment } from '@fortawesome/free-regular-svg-icons';
 import { format } from 'date-fns';
 
@@ -28,7 +28,15 @@ const QuestionCard = ({
         <div className="bg-white p-4 rounded-lg shadow relative cursor-pointer" onClick={onCardClick}>
             {/* Header: Title and MoreActions */}
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-blue-900">{question.title}</h1>
+                <div className="flex items-center">
+                    <h1 className="text-2xl font-bold text-blue-900">{question.title}</h1>
+                    {question.locked && (
+                        <div className="ml-2 bg-gray-100 text-gray-600 rounded-full px-2 py-1 flex items-center text-sm">
+                            <FontAwesomeIcon icon={faLock} className="mr-1" />
+                            <span>Locked</span>
+                        </div>
+                    )}
+                </div>
                 {currentUser && (currentUser._id === question.user._id || currentUser.isAdmin) && (
                     <div onClick={(e) => e.stopPropagation()}>
                         <MoreActions
@@ -62,12 +70,6 @@ const QuestionCard = ({
                     </Link>
                     <span className="mx-1">•</span>
                     <span>{format(new Date(question.createdAt), 'dd/MM/yyyy HH:mm')}</span>
-                    {question.locked && (
-                        <>
-                            <span className="mx-1">•</span>
-                            <span className="text-red-500">Locked</span>
-                        </>
-                    )}
                 </div>
             </div>
 

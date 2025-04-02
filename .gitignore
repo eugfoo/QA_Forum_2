@@ -7,6 +7,10 @@ backend/node_modules/
 frontend/dist/
 backend/build/
 
+# Uploaded content
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # Logs
 logs
 *.log

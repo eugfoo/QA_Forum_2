@@ -29,9 +29,17 @@ const Register = () => {
         } catch (error) {
             console.error('Registration error:', error);
             if (error.response && error.response.data) {
-                // In case your API returns an array of errors, you might pick the first message.
                 const errData = error.response.data;
-                toast.error(errData.error || (errData.errors && errData.errors[0]?.msg) || 'Registration failed');
+                const errorMessage = errData.error || (errData.errors && errData.errors[0]?.msg) || 'Registration failed';
+                
+                // Display specific error message for username taken
+                if (errorMessage === 'Username is already taken') {
+                    toast.error('This username is already taken. Please choose another one.');
+                } else if (errorMessage === 'Email already registered') {
+                    toast.error('This email is already registered. Please use a different email or login.');
+                } else {
+                    toast.error(errorMessage);
+                }
             } else {
                 toast.error('Registration failed');
             }
@@ -42,6 +50,7 @@ const Register = () => {
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
             <div className="w-full max-w-md bg-white p-6 rounded shadow">
                 <h2 className="text-2xl font-bold text-center mb-4">Register</h2>
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="username" className="block mb-1 font-medium">

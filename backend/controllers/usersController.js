@@ -2,6 +2,7 @@
 const User = require('../models/User');
 const { validateRegister, validatePasswordChange } = require('../utils/validators');
 const jwt = require('jsonwebtoken');
+const Notification = require('../models/Notification');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -22,16 +23,23 @@ const registerUser = async (req, res) => {
     }
 
     try {
+        // Check if email already exists
         if (await User.findOne({ email })) {
             return res.status(400).json({ error: 'Email already registered' });
         }
+
+        // Check if username already exists
+        if (await User.findOne({ username })) {
+            return res.status(400).json({ error: 'Username is already taken' });
+        }
+
         const user = await new User({ username, email, password }).save();
-        
+
         // Generate JWT token
         const token = generateToken(user._id);
-        
-        return res.status(201).json({ 
-            message: 'User created', 
+
+        return res.status(201).json({
+            message: 'User created',
             user: {
                 _id: user._id,
                 username: user.username,
@@ -56,13 +64,13 @@ const loginUser = async (req, res) => {
             console.log('Login failed: Invalid credentials');
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-        
+
         // Generate JWT token
         const token = generateToken(user._id);
         console.log('Login successful, generated token:', token.substring(0, 20) + '...');
-        
-        const response = { 
-            message: 'Login successful', 
+
+        const response = {
+            message: 'Login successful',
             user: {
                 _id: user._id,
                 username: user.username,
@@ -102,8 +110,11 @@ const getProfile = async (req, res) => {
             ...answersPosted.map(a => ({ ...a, type: 'answer' }))
         ];
 
+        // Sort activities by createdAt date, newest first
+        activities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
         const page = Math.max(1, parseInt(req.query.page) || 1);
-        const limit = 4;
+        const limit = 3;
         const totalPages = Math.ceil(activities.length / limit);
         const paginatedActivities = activities.slice((page - 1) * limit, page * limit);
 
@@ -118,7 +129,7 @@ const getCurrentUser = async (req, res) => {
     try {
         // req.user is already attached by the auth middleware
         const user = req.user;
-        
+
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -155,7 +166,7 @@ const getCurrentUser = async (req, res) => {
             totalUpvotes += answerUpvotes;
         }
 
-        res.json({ 
+        res.json({
             user: {
                 _id: user._id,
                 username: user.username,
@@ -179,17 +190,25 @@ const updateProfile = async (req, res) => {
     try {
         console.log('Update profile request:', {
             body: req.body,
-            file: req.file ? { 
+            file: req.file ? {
                 filename: req.file.filename,
                 path: req.file.path,
                 mimetype: req.file.mimetype,
                 size: req.file.size
             } : 'No file uploaded'
         });
-        
+
         const { username, bio } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ error: 'User not found' });
+
+        // Check if the new username already exists (but only if it's different from current)
+        if (username !== user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Username is already taken' });
+            }
+        }
 
         user.username = username;
         user.bio = bio;
@@ -201,9 +220,9 @@ const updateProfile = async (req, res) => {
         }
 
         await user.save();
-        
-        return res.status(200).json({ 
-            message: 'Profile updated successfully', 
+
+        return res.status(200).json({
+            message: 'Profile updated successfully',
             user: {
                 _id: user._id,
                 username: user.username,
@@ -251,6 +270,89 @@ const updateSettings = async (req, res) => {
     }
 };
 
+// Get user notifications
+const getNotifications = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Find notifications for this user and sort by newest first
+        const notifications = await Notification.find({ recipient: userId })
+            .sort({ createdAt: -1 });
+
+        res.json(notifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Mark notifications as read
+const markNotificationsAsRead = async (req, res) => {
+    try {
+        console.log('markNotificationsAsRead called with req.user:', req.user);
+        console.log('Request body:', req.body);
+        
+        // Make sure req.user exists and has an _id
+        if (!req.user || !req.user._id) {
+            console.error('markNotificationsAsRead: req.user is invalid', req.user);
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+        
+        const userId = req.user._id;
+        // Safely extract notificationIds with a fallback
+        const notificationIds = req.body && req.body.notificationIds;
+        
+        console.log(`Marking notifications as read for user ${userId}, notificationIds:`, notificationIds);
+        
+        // If specific notification IDs provided, mark only those as read
+        if (notificationIds && notificationIds.length > 0) {
+            console.log(`Marking specific notifications as read: ${notificationIds.join(', ')}`);
+            try {
+                const result = await Notification.updateMany(
+                    { _id: { $in: notificationIds }, recipient: userId },
+                    { $set: { read: true } }
+                );
+                console.log('Update result for specific notifications:', result);
+                return res.json({ 
+                    success: true, 
+                    count: result.modifiedCount,
+                    message: `Marked ${result.modifiedCount} notifications as read`
+                });
+            } catch (updateError) {
+                console.error('Error updating specific notifications:', updateError);
+                throw updateError;
+            }
+        }
+        
+        // Otherwise mark all notifications as read
+        console.log(`Marking all unread notifications as read for user ${userId}`);
+        try {
+            const result = await Notification.updateMany(
+                { recipient: userId, read: false },
+                { $set: { read: true } }
+            );
+            console.log('Update result for all notifications:', result);
+            
+            return res.json({ 
+                success: true, 
+                count: result.modifiedCount,
+                message: `Marked all (${result.modifiedCount}) notifications as read`
+            });
+        } catch (updateError) {
+            console.error('Error updating all notifications:', updateError);
+            throw updateError;
+        }
+    } catch (error) {
+        console.error('Error in markNotificationsAsRead:', error);
+        console.error('Error stack:', error.stack);
+        return res.status(500).json({ 
+            error: 'Server error', 
+            message: error.message,
+            stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -258,5 +360,7 @@ module.exports = {
     getProfile,
     updateProfile,
     updateSettings,
-    getCurrentUser
+    getCurrentUser,
+    getNotifications,
+    markNotificationsAsRead
 };

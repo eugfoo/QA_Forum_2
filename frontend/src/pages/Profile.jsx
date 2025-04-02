@@ -3,9 +3,9 @@ import React, { useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { fetchCurrentUser } from '../services/api'; // You'll define this
+import ActivityTimeline from '../components/ActivityTimeline';
 
-const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg }) => {
-
+const ProfilePage = () => {
     const { currentUser, setCurrentUser } = useContext(AuthContext); // ✅ fixed here
     
     useEffect(() => {
@@ -30,7 +30,6 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
 
     return (
         <div>
-
             <div className="profile-container mx-auto max-w-4xl p-6 bg-white shadow-lg rounded-lg mt-8">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center">
@@ -76,68 +75,8 @@ const ProfilePage = ({ activities, currentPage, totalPages, errorMsg, successMsg
                     </div>
                 </div>
 
-                <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-                    {activities && activities.length > 0 ? (
-                        <>
-                            <ol className="relative border-l border-gray-200">
-                                {activities.map((activity, index) => (
-                                    <li key={activity._id || index} className="mb-10 ml-6">
-                                        <span className="absolute flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full -left-4 ring-8 ring-white">
-                                            {activity.type === 'question' ? (
-                                                <i className="fa-solid fa-question text-blue-600"></i>
-                                            ) : activity.type === 'answer' ? (
-                                                <i className="fa-solid fa-comment text-blue-600"></i>
-                                            ) : null}
-                                        </span>
-                                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                                            <time className="mb-1 text-xs font-normal text-gray-400">
-                                                {new Date(activity.createdAt).toLocaleString()}
-                                            </time>
-                                            {activity.type === 'question' ? (
-                                                <div className="text-sm font-normal text-gray-500">
-                                                    {currentUser.username} posted a new question:{' '}
-                                                    <Link to={`/questions/${activity._id}`} className="font-semibold text-blue-600 hover:underline">
-                                                        "{activity.title}"
-                                                    </Link>
-                                                </div>
-                                            ) : activity.type === 'answer' ? (
-                                                <div className="text-sm font-normal text-gray-500">
-                                                    Answered{' '}
-                                                    <Link to={`/questions/${activity.question._id}`} className="font-semibold text-blue-600 hover:underline">
-                                                        "{activity.question.title}"
-                                                    </Link>{' '}
-                                                    with: "{activity.body}"
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ol>
-                            <div className="mt-4 flex justify-between items-center">
-                                {currentPage > 1 ? (
-                                    <Link to={`/users/profile?page=${currentPage - 1}`} className="px-3 py-1 rounded bg-blue-600 text-white">
-                                        Previous
-                                    </Link>
-                                ) : (
-                                    <span className="px-3 py-1 rounded bg-gray-300 text-white">Previous</span>
-                                )}
-                                <span className="text-sm">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                {currentPage < totalPages ? (
-                                    <Link to={`/users/profile?page=${currentPage + 1}`} className="px-3 py-1 rounded bg-blue-600 text-white">
-                                        Next
-                                    </Link>
-                                ) : (
-                                    <span className="px-3 py-1 rounded bg-gray-300 text-white">Next</span>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <p>No recent activity.</p>
-                    )}
-                </div>
+                {/* Activity Timeline Component */}
+                <ActivityTimeline userId={currentUser._id} />
             </div>
         </div>
     );

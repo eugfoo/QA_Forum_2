@@ -15,6 +15,7 @@ const QuestionList = ({ refreshKey }) => {
     const [searchParams] = useSearchParams();
     const filter = searchParams.get('filter') || 'latest';
     const view = searchParams.get('view') || 'general';
+    const search = searchParams.get('search') || '';
     const [fade, setFade] = useState(false);
 
     useEffect(() => {
@@ -22,8 +23,8 @@ const QuestionList = ({ refreshKey }) => {
             try {
                 setFade(false);
                 setLoading(true);
-                console.log(`Fetching questions with filter=${filter}, view=${view} (attempt ${retryCount + 1})`);
-                const response = await fetchQuestions(filter, view);
+                console.log(`Fetching questions with filter=${filter}, view=${view}, search=${search} (attempt ${retryCount + 1})`);
+                const response = await fetchQuestions(filter, view, search);
                 console.log('Questions fetched successfully:', response.data.questions.length);
                 setQuestions(response.data.questions);
             } catch (err) {
@@ -55,7 +56,7 @@ const QuestionList = ({ refreshKey }) => {
         };
 
         getQuestions();
-    }, [filter, view, refreshKey]);
+    }, [filter, view, search, refreshKey]);
 
     const handleEdit = async (questionId, editedData) => {
         try {
@@ -116,18 +117,44 @@ const QuestionList = ({ refreshKey }) => {
 
     return (
         <div className={`space-y-4 ${fade ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
-            {questions.map((question) => (
-                <QuestionCard
-                    key={question._id}
-                    question={question}
-                    currentUser={currentUser}
-                    onCardClick={() => navigate(`/questions/${question._id}`)}
-                    onVote={handleVote}
-                    onEdit={(editedData) => handleEdit(question._id, editedData)}
-                    onLock={() => handleLock(question._id, question.locked)}
-                    onDelete={() => handleDelete(question._id)}
-                />
-            ))}
+            {search && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 flex justify-between items-center">
+                    <div>
+                        <span className="font-medium">Search results for: </span>
+                        <span className="text-blue-700">"{search}"</span>
+                        {questions.length === 0 ? (
+                            <p className="text-gray-500 mt-1">No questions found matching your search.</p>
+                        ) : (
+                            <p className="text-gray-500 mt-1">Found {questions.length} matching questions</p>
+                        )}
+                    </div>
+                    <button 
+                        onClick={() => navigate(`/?filter=${filter}&view=${view}`)}
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm"
+                    >
+                        Clear Search
+                    </button>
+                </div>
+            )}
+            
+            {questions.length === 0 && !search ? (
+                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                    <p className="text-gray-500">No questions found.</p>
+                </div>
+            ) : (
+                questions.map((question) => (
+                    <QuestionCard
+                        key={question._id}
+                        question={question}
+                        currentUser={currentUser}
+                        onCardClick={() => navigate(`/questions/${question._id}`)}
+                        onVote={handleVote}
+                        onEdit={(editedData) => handleEdit(question._id, editedData)}
+                        onLock={() => handleLock(question._id, question.locked)}
+                        onDelete={() => handleDelete(question._id)}
+                    />
+                ))
+            )}
         </div>
     );
 };

@@ -96,6 +96,11 @@ export const updateUserProfile = (formData) => api.put('/users/profile', formDat
         'Content-Type': 'multipart/form-data'
     }
 });
+export const updateSettings = (passwordData) => api.put('/users/settings', passwordData);
+
+// Notification-related API functions
+export const getNotifications = () => api.get('/users/notifications');
+export const markNotificationsAsRead = (notificationIds = []) => api.put('/users/notifications/read', { notificationIds });
 
 // Question-related API functions
 export const getQuestions = (filter = 'all', view = 'list') => api.get(`/questions?filter=${filter}&view=${view}`);
@@ -107,9 +112,14 @@ export const voteQuestion = (questionId, voteType) => api.post(`/questions/${que
 export const lockQuestion = (questionId) => api.post(`/questions/${questionId}/lock`);
 export const unlockQuestion = (questionId) => api.post(`/questions/${questionId}/unlock`);
 // Question-related calls
-export const fetchQuestions = (filter = 'latest', view = 'general') => {
-    console.log(`Attempting to fetch questions: filter=${filter}, view=${view}`);
-    return api.get(`/questions?filter=${filter}&view=${view}`)
+export const fetchQuestions = (filter = 'latest', view = 'general', search = '') => {
+    console.log(`Attempting to fetch questions: filter=${filter}, view=${view}, search=${search}`);
+    let url = `/questions?filter=${filter}&view=${view}`;
+    if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    return api.get(url)
         .then(response => {
             console.log(`Successfully fetched ${response.data.questions?.length || 0} questions`);
             return response;
@@ -129,7 +139,21 @@ export const fetchQuestions = (filter = 'latest', view = 'general') => {
 // Answer-related API functions
 export const getAnswers = (questionId) => api.get(`/questions/${questionId}/answers`);
 export const createAnswer = (questionId, data) => api.post(`/answers/${questionId}`, data);
+export const editAnswer = (answerId, data) => api.post(`/answers/${answerId}/update`, data);
 export const voteAnswer = (answerId, voteType) => api.post(`/answers/${answerId}/vote`, { voteType });
 export const deleteAnswer = (answerId) => api.get(`/answers/${answerId}/delete`);
+
+// Activity timeline
+export const fetchUserActivity = (page = 1) => {
+    return api.get(`/users/profile?page=${page}`)
+        .then(response => {
+            console.log(`Successfully fetched user activity for page ${page}`);
+            return response;
+        })
+        .catch(error => {
+            console.error('Error fetching user activity:', error);
+            throw error;
+        });
+};
 
 export default api;

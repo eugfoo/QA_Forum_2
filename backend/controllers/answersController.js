@@ -12,14 +12,14 @@ const postAnswer = async (req, res) => {
         }
         
         // Prevent users from answering their own questions
-        if (question.user.toString() === req.session.user._id.toString()) {
+        if (question.user.toString() === req.user._id.toString()) {
             return res.status(403).json({ error: 'You cannot answer your own question' });
         }
 
         // Check if user has already answered (if needed)
         const existingAnswer = await Answer.findOne({
             question: questionId,
-            user: req.session.user._id
+            user: req.user._id
         });
         const isFirstAnswer = !existingAnswer;
 
@@ -32,7 +32,7 @@ const postAnswer = async (req, res) => {
 
         const newAnswer = new Answer({
             body: answerBody,
-            user: req.session.user._id,
+            user: req.user._id,
             question: question._id,
             anonymous: anonymousFlag // Save the anonymous flag on the document
         });
@@ -44,9 +44,27 @@ const postAnswer = async (req, res) => {
         await question.save();
 
         if (isFirstAnswer) {
-            await User.findByIdAndUpdate(req.session.user._id, {
+            await User.findByIdAndUpdate(req.user._id, {
                 $inc: { questionsAnsweredCount: 1 }
             });
+        }
+
+        // Create a notification for the question author
+        // First check if a notification already exists for this answer
+        const existingNotification = await Notification.findOne({
+            recipient: question.user,
+            question: question._id,
+            answer: newAnswer._id
+        });
+        
+        if (!existingNotification) {
+            const notification = new Notification({
+                recipient: question.user,
+                question: question._id,
+                answer: newAnswer._id,
+                read: false
+            });
+            await notification.save();
         }
 
         return res.status(201).json({
@@ -63,7 +81,7 @@ const voteAnswer = async (req, res) => {
     try {
         const { answerId } = req.params;
         const { voteType } = req.body;
-        const voterId = req.session.user._id;
+        const voterId = req.user._id;
 
         const answer = await Answer.findById(answerId);
         if (!answer) {
@@ -122,7 +140,7 @@ const getEditAnswer = async (req, res) => {
         if (!answer) {
             return res.status(404).json({ error: 'Answer not found.' });
         }
-        if (answer.user.toString() !== req.session.user._id.toString()) {
+        if (answer.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized to edit this answer' });
         }
         if (answer.question.locked) {
@@ -141,7 +159,7 @@ const updateAnswer = async (req, res) => {
         if (!answer) {
             return res.status(404).json({ error: 'Answer not found.' });
         }
-        if (answer.user.toString() !== req.session.user._id.toString()) {
+        if (answer.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized to edit this answer' });
         }
         answer.body = req.body.body;
@@ -159,7 +177,7 @@ const deleteAnswer = async (req, res) => {
         if (!answer) {
             return res.status(404).json({ error: 'Answer not found.' });
         }
-        if (answer.user.toString() !== req.session.user._id.toString()) {
+        if (answer.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized to delete this answer' });
         }
         const question = await Question.findById(answer.question._id);

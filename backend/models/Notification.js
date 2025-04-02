@@ -8,4 +8,20 @@ const notificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+// Middleware to automatically populate references
+notificationSchema.pre(/^find/, function(next) {
+    this.populate({
+        path: 'question',
+        select: 'title'
+    }).populate({
+        path: 'answer',
+        select: 'content anonymous user createdAt',
+        populate: {
+            path: 'user',
+            select: 'username'
+        }
+    });
+    next();
+});
+
 module.exports = mongoose.model('Notification', notificationSchema);

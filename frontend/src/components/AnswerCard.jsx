@@ -36,7 +36,7 @@ const AnswerCard = ({ answer, isQuestionLocked, onVote, onDelete, onEdit }) => {
                     <MoreActions
                         type="answer"
                         answer={answer} // ✅ pass the actual answer
-                        onEdit={onEdit}
+                        onEdit={(editedData) => onEdit(answer._id, editedData)}
                         onDelete={() => onDelete(answer._id)}
                     />
                 </div>

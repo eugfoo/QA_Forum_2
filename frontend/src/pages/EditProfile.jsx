@@ -42,9 +42,16 @@ const EditProfile = () => {
             }
         } catch (err) {
             console.error('Error updating profile:', err);
-            console.error('Error response:', err.response?.data);
-            setError(err.response?.data?.error || 'Failed to update profile');
-            toast.error(err.response?.data?.error || 'Failed to update profile');
+            
+            const errorMessage = err.response?.data?.error || 'Failed to update profile';
+            setError(errorMessage);
+            
+            // Display specific error message for username taken
+            if (errorMessage === 'Username is already taken') {
+                toast.error('This username is already taken. Please choose another one.');
+            } else {
+                toast.error(errorMessage);
+            }
         } finally {
             setLoading(false);
         }

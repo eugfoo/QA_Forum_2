@@ -5,6 +5,16 @@ const SidebarFilters = ({ currentUser }) => {
     const [searchParams] = useSearchParams();
     const filter = searchParams.get('filter') || 'latest';
     const view = searchParams.get('view') || 'general';
+    const search = searchParams.get('search') || '';
+
+    // Create URL with preserved search parameter
+    const createUrl = (view, filter) => {
+        let url = `/?view=${view}&filter=${filter}`;
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
+        return url;
+    };
 
     const getLinkStyle = (isActive) =>
         `block px-4 py-2 rounded-md transition duration-200 font-medium ${isActive
@@ -20,7 +30,7 @@ const SidebarFilters = ({ currentUser }) => {
                 <ul className="space-y-2">
                     <li>
                         <Link
-                            to={`/?view=general&filter=${filter}`}
+                            to={createUrl('general', filter)}
                             className={getLinkStyle(view === 'general')}
                         >
                             <i className="fa-solid fa-globe mr-2"></i>
@@ -30,7 +40,7 @@ const SidebarFilters = ({ currentUser }) => {
                     {currentUser && (
                         <li>
                             <Link
-                                to={`/?view=myProfile&filter=${filter}`}
+                                to={createUrl('myProfile', filter)}
                                 className={getLinkStyle(view === 'myProfile')}
                             >
                                 <i className="fa-solid fa-user mr-2"></i>
@@ -54,7 +64,7 @@ const SidebarFilters = ({ currentUser }) => {
                     ].map(({ key, label, icon }) => (
                         <li key={key}>
                             <Link
-                                to={`/?filter=${key}&view=${view}`}
+                                to={createUrl(view, key)}
                                 className={getLinkStyle(filter === key)}
                             >
                                 <i className={`fa-solid ${icon} mr-2`}></i>

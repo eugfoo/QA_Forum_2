@@ -7,11 +7,20 @@ const fetchAllQuestions = async (req, res, next) => {
     try {
         const filter = (req.query.filter || 'latest');
         const view = req.query.view || 'general';
-        console.log("sadada: " + filter);
+        const search = req.query.search || '';
+        console.log(`Fetching questions with filter=${filter}, view=${view}, search=${search}`);
 
         let query = {};
         if (view === 'myProfile' && req.user) {
             query.user = req.user._id;
+        }
+
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { body: { $regex: search, $options: 'i' } },
+                { tags: { $elemMatch: { $regex: search, $options: 'i' } } }
+            ];
         }
 
         let questions = await Question.find(query)

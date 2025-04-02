@@ -4,39 +4,113 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import api from '../services/api';
 
-const Navbar = ({ notifications: initialNotifications = [] }) => {
+const Navbar = () => {
     const { currentUser, logout, setLogoutInProgress } = useContext(AuthContext);
     const navigate = useNavigate();
     // State for notifications dropdown
     const [isNotiOpen, setIsNotiOpen] = useState(false);
-    // Derive the initial notification count (e.g. count unread notifications)
-    const [notificationCount, setNotificationCount] = useState(
-        initialNotifications.filter(n => !n.read).length
-    );
+    // State for notifications
+    const [notifications, setNotifications] = useState([]);
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [loading, setLoading] = useState(false);
     const notificationDropdownRef = useRef(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Toggle notifications dropdown on click
     const handleNotificationClick = (e) => {
         e.stopPropagation();
-        // Simulate marking notifications as read (you could call an API here)
-        setNotificationCount(0);
-        setIsNotiOpen(prev => !prev);
+        setIsNotiOpen(!isNotiOpen);
     };
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = (e) => {
+        const handleClickOutside = async (e) => {
             if (
                 notificationDropdownRef.current &&
-                !notificationDropdownRef.current.contains(e.target)
+                !notificationDropdownRef.current.contains(e.target) &&
+                isNotiOpen
             ) {
                 setIsNotiOpen(false);
+                
+                // Mark notifications as read when closing the dropdown
+                if (notificationCount > 0) {
+                    try {
+                        console.log('Attempting to mark notifications as read on dropdown close...');
+                        
+                        // Mark all notifications as read in the API
+                        const response = await api.put('/users/notifications/read', {});
+                        console.log('Mark as read response:', response.data);
+                        
+                        // Update the notification count after API call succeeds
+                        setNotificationCount(0);
+                        
+                        // Update the notification objects in state to show as read
+                        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                    } catch (error) {
+                        console.error('Error marking notifications as read:', error);
+                        console.error('Error details:', error.response?.data || 'No response data');
+                        
+                        // If API call fails, restore the notification count
+                        fetchNotifications();
+                        
+                        // Show error toast
+                        toast.error('Failed to mark notifications as read. Please try again later.');
+                    }
+                }
             }
         };
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
-    }, []);
+    }, [isNotiOpen, notificationCount]);
+
+    // Fetch notifications when component mounts or when currentUser changes
+    useEffect(() => {
+        if (currentUser) {
+            fetchNotifications();
+        }
+    }, [currentUser]);
+
+    // Periodically refresh notifications every 30 seconds
+    useEffect(() => {
+        if (!currentUser) return;
+        
+        // Initial fetch
+        fetchNotifications();
+        
+        // Set up interval to fetch notifications
+        const intervalId = setInterval(() => {
+            fetchNotifications();
+        }, 30000); // 30 seconds
+        
+        // Clean up interval on unmount
+        return () => clearInterval(intervalId);
+    }, [currentUser]);
+
+    // Fetch notifications from the API
+    const fetchNotifications = async () => {
+        if (!currentUser) return;
+        
+        try {
+            setLoading(true);
+            const response = await api.get('/users/notifications');
+            const notificationsData = response.data || [];
+            setNotifications(notificationsData);
+            
+            // Count unread notifications
+            const unreadCount = notificationsData.filter(n => n.read === false).length;
+            console.log(`Found ${unreadCount} unread notifications out of ${notificationsData.length} total`);
+            setNotificationCount(unreadCount);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            // Reset notifications to empty array in case of error
+            setNotifications([]);
+            setNotificationCount(0);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -58,7 +132,11 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
         }
     };
 
-
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) return;
+        navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    };
 
     return (
         <nav className="bg-gray-900 text-white sticky top-0 z-50">
@@ -71,12 +149,13 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                     <form
                         className="flex items-center space-x-2"
                         role="search"
-                        action="/questions/search"
-                        method="GET"
+                        onSubmit={handleSearch}
                     >
                         <input
                             type="search"
                             name="q"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search questions..."
                             className="p-2 bg-gray-800 text-white placeholder-white border border-gray-700 rounded"
                         />
@@ -114,9 +193,13 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                         ref={notificationDropdownRef}
                                         className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg"
                                     >
-                                        <div id="notificationList" className="py-2">
-                                            {initialNotifications.length > 0 ? (
-                                                initialNotifications.map((notification) => {
+                                        <div id="notificationList" className="max-h-64 overflow-y-auto py-2 custom-scrollbar">
+                                            {loading ? (
+                                                <p className="px-4 py-2 text-sm text-gray-500 text-center">
+                                                    Loading notifications...
+                                                </p>
+                                            ) : notifications.length > 0 ? (
+                                                notifications.slice(0, 4).map((notification) => {
                                                     let username = "Anonymous";
                                                     if (notification.answer) {
                                                         if (notification.answer.anonymous) {
@@ -127,17 +210,31 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                                                 "Unknown";
                                                         }
                                                     }
-                                                    const highlightClass = notification.read ? "" : "bg-blue-100";
+                                                    const highlightClass = notification.read ? "" : "bg-blue-50 border-l-4 border-blue-500";
                                                     return (
                                                         <Link
                                                             key={notification._id}
                                                             to={`/questions/${notification.question._id}`}
                                                             className={`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${highlightClass}`}
+                                                            onClick={() => {
+                                                                // Close the dropdown when notification is clicked
+                                                                setIsNotiOpen(false);
+                                                            }}
                                                         >
-                                                            <p>
-                                                                <strong>{username}</strong> answered your question:{" "}
-                                                                <strong>"{notification.question.title}"</strong>
-                                                            </p>
+                                                            <div className="flex items-start">
+                                                                <div className="flex-grow">
+                                                                    <p>
+                                                                        <strong>{username}</strong> answered your question:{" "}
+                                                                        <strong>"{notification.question.title}"</strong>
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        {new Date(notification.createdAt).toLocaleString()}
+                                                                    </p>
+                                                                </div>
+                                                                {!notification.read && (
+                                                                    <span className="bg-blue-500 rounded-full h-2 w-2 mt-2 ml-1" aria-label="Unread notification"></span>
+                                                                )}
+                                                            </div>
                                                         </Link>
                                                     );
                                                 })
@@ -147,10 +244,21 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                                 </p>
                                             )}
                                         </div>
+                                        {notifications.length > 4 && (
+                                            <div className="border-t border-gray-100 py-1 bg-gray-50">
+                                                <p className="text-xs text-gray-500 text-center px-4">
+                                                    Showing 4 of {notifications.length} notifications
+                                                </p>
+                                            </div>
+                                        )}
                                         <div className="border-t border-gray-100">
                                             <Link
                                                 to="/notifications"
                                                 className="block px-4 py-2 text-sm text-center text-gray-700 hover:bg-gray-100"
+                                                onClick={() => {
+                                                    // Close the dropdown when "See all notifications" is clicked
+                                                    setIsNotiOpen(false);
+                                                }}
                                             >
                                                 See all notifications
                                             </Link>
@@ -167,13 +275,13 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                     type="button"
                                 >
                                     <img
-                                        src={`${currentUser.profilePic}?${new Date().getTime()}`}
+                                        src={currentUser.profilePic ? `${currentUser.profilePic}` : '/default-avatar.png'}
                                         alt="Profile"
-                                        className="w-6 h-6 rounded-full object-cover mr-2"
+                                        className="w-6 h-6 rounded-full object-cover mr-2 bg-gray-200"
                                         onError={(e) => {
-                                            console.error('Error loading profile image in navbar, using fallback');
+                                            console.log('Using default avatar due to image load error');
                                             e.target.src = '/default-avatar.png';
-                                            e.target.onerror = null;
+                                            e.target.onerror = null; // Prevent infinite error loop
                                         }}
                                     />
                                     <span className="truncate max-w-[80px]">{currentUser.username}</span>

@@ -4,6 +4,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { voteQuestion, deleteQuestion, getQuestion, unlockQuestion, lockQuestion } from '../services/api';
 import { toast } from 'react-toastify';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock } from '@fortawesome/free-solid-svg-icons';
 import AnswerList from '../components/AnswerList';
 import AnswerForm from '../components/AnswerForm';
 import EditQuestionModal from '../components/EditQuestionModal';
@@ -146,7 +148,7 @@ const QuestionDetails = () => {
                 <AnswerList questionId={id} isQuestionLocked={question.locked} refreshKey={answersRefresh} />
             </div>
 
-            {/* Fixed Answer Form - Don't show if user is the question owner */}
+            {/* Fixed Answer Form - Don't show if user is the question owner or if question is locked */}
             {currentUser && question && currentUser._id !== question.user._id && !question.locked && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
                     <div className="max-w-4xl mx-auto">
@@ -161,6 +163,18 @@ const QuestionDetails = () => {
                     <div className="max-w-4xl mx-auto">
                         <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
                             You cannot answer your own question
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Message when question is locked */}
+            {currentUser && question && question.locked && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
+                            <FontAwesomeIcon icon={faLock} className="mr-2" />
+                            This question is locked and no longer accepting answers
                         </div>
                     </div>
                 </div>

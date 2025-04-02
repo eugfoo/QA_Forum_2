@@ -90,17 +90,17 @@ const searchQuestions = async (req, res) => {
 const getQuestionDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const sortOption = req.query.sort || req.session.sort || 'latest';
+        console.log('Fetching question with id:', id); // Debug log
 
-        req.session.sort = sortOption;
+        const sortOption = req.query.sort || 'latest';
 
         const question = await Question.findById(id)
             .populate('user')
             .populate({ path: 'answers', populate: { path: 'user' } });
 
         if (!question) {
-            req.flash('error_msg', 'Question not found.');
-            return res.redirect('/');
+            console.log('No question found for id:', id); // Debug log
+            return res.status(404).json({ error: 'Question not found.' });
         }
 
         const sortingMethods = {
@@ -112,12 +112,15 @@ const getQuestionDetails = async (req, res) => {
 
         question.answers.sort(sortingMethods[sortOption]);
 
-        res.render('questionDetail', { question, sort: sortOption });
+        return res.status(200).json(question);
     } catch (err) {
-        req.flash('error_msg', 'Error loading question details.');
-        res.redirect('/');
+        console.error('Error in getQuestionDetails:', err);
+        return res.status(500).json({ error: 'Error loading question details.' });
     }
 };
+
+
+
 
 
 const updateQuestion = async (req, res) => {
@@ -204,9 +207,21 @@ const deleteQuestion = async (req, res) => {
 const voteForQuestion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { voteType } = req.body;
-        const userId = req.session.user._id;
+        const { voteType } = req.body; // Expected values: 'up' or 'down'
+        const userId = req.session.user && req.session.user._id;
+        if (!userId) {
+            return res.status(401).json({ error: 'User not logged in.' });
+        }
+
         const question = await Question.findById(id);
+        if (!question) {
+            return res.status(404).json({ error: 'Question not found.' });
+        }
+        // Ensure votes structure is defined properly
+        if (!question.votes || !Array.isArray(question.votes.up) || !Array.isArray(question.votes.down)) {
+            return res.status(500).json({ error: 'Votes structure is missing or invalid.' });
+        }
+
         const isUpvoted = question.votes.up.some(uid => uid.toString() === userId.toString());
         const isDownvoted = question.votes.down.some(uid => uid.toString() === userId.toString());
 
@@ -234,6 +249,8 @@ const voteForQuestion = async (req, res) => {
                 voteChange = isUpvoted ? 0 : 1;
                 upvoteReceivedChange = -1;
             }
+        } else {
+            return res.status(400).json({ error: 'Invalid vote type.' });
         }
 
         await question.save();
@@ -243,13 +260,14 @@ const voteForQuestion = async (req, res) => {
             User.findByIdAndUpdate(question.user, { $inc: { upvotesReceived: upvoteReceivedChange } }),
         ]);
 
-        req.flash('success_msg', 'Vote recorded.');
-        res.redirect(req.get('referer'));
+        return res.status(200).json({ message: 'Vote recorded.' });
     } catch (err) {
-        req.flash('error_msg', 'Error recording vote.');
-        res.redirect('back');
+        console.error('Error recording vote:', err);
+        return res.status(500).json({ error: 'Error recording vote.' });
     }
 };
+
+
 
 const lockQuestion = async (req, res) => {
     try {

@@ -1,26 +1,34 @@
+// src/components/MoreActions.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import EditQuestionModal from './EditQuestionModal';
+import EditAnswerModal from './EditAnswerModal'; // Make sure you have this component
 
-const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionTitle, question }) => {
+const MoreActions = ({
+    type = "question", // "question" or "answer"
+    question, 
+    answer,          // Provided for questions; for answers, this can be omitted
+    questionId,        // For questions; for answers, you might pass answerId
+    isLocked,
+    onEdit,            // Callback for editing
+    onLock,            // Callback for locking (only used for questions)
+    onDelete,          // Callback for deleting
+    questionTitle,     // Optional, for questions
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
-        console.log('MoreActions - isLocked:', isLocked);
-        console.log('MoreActions - question:', question);
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isLocked, question]);
+    }, []);
 
     const handleEdit = () => {
         setIsOpen(false);
@@ -72,29 +80,8 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
 
                 {isOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                        {!isLocked && (
-                            <button
-                                onClick={handleEdit}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                                <svg
-                                    className="w-4 h-4 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                </svg>
-                                Edit
-                            </button>
-                        )}
                         <button
-                            onClick={handleLock}
+                            onClick={handleEdit}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         >
                             <svg
@@ -107,14 +94,36 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth="2"
-                                    d={isLocked 
-                                        ? "M13 10V3L4 14h7v7l9-11h-7z"
-                                        : "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                    }
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                             </svg>
-                            {isLocked ? 'Unlock' : 'Lock'}
+                            Edit
                         </button>
+                        {type === "question" && (
+                            <button
+                                onClick={handleLock}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            >
+                                <svg
+                                    className="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d={
+                                            isLocked
+                                                ? "M13 10V3L4 14h7v7l9-11h-7z"
+                                                : "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                        }
+                                    />
+                                </svg>
+                                {isLocked ? 'Unlock' : 'Lock'}
+                            </button>
+                        )}
                         <button
                             onClick={handleDeleteClick}
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
@@ -138,21 +147,35 @@ const MoreActions = ({ questionId, isLocked, onEdit, onLock, onDelete, questionT
                 )}
             </div>
 
+            {/* Conditionally render modals based on type */}
+            {type === "question" ? (
+                <>
+                    <EditQuestionModal
+                        isOpen={showEditModal}
+                        onClose={() => setShowEditModal(false)}
+                        onSave={handleEditSave}
+                        question={question}
+                    />
+                </>
+            ) : (
+                <>
+                    <EditAnswerModal
+                        isOpen={showEditModal}
+                        onClose={() => setShowEditModal(false)}
+                        onSave={handleEditSave} // Your callback for saving the answer
+                        answer={answer}   // Make sure selectedAnswer contains the answer data
+                    />
+                </>
+            )}
+
             <DeleteConfirmationModal
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDeleteConfirm}
                 title={questionTitle}
             />
-
-            <EditQuestionModal
-                isOpen={showEditModal}
-                onClose={() => setShowEditModal(false)}
-                onSave={handleEditSave}
-                question={question}
-            />
         </>
     );
 };
 
-export default MoreActions; 
+export default MoreActions;

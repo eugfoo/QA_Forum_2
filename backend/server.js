@@ -31,12 +31,7 @@ app.use(cors({
 // API routes
 app.use('/api/users', require('./routes/users'));
 app.use('/api/questions', require('./routes/questions'));
-// app.use('/api/answers', require('./routes/answers')); // Create similar routes for answers
-
-// Test route
-// app.get('/', (req, res) => {
-//     res.json({ message: 'API running!' });
-// });
+app.use('/api/answers', require('./routes/answers')); // Create similar routes for answers
 
 // Start server
 const PORT = process.env.PORT || 3000;

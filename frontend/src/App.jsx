@@ -11,6 +11,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PrivateRoute from './components/PrivateRoute';
 import NotFound from './pages/NotFound';
+import QuestionDetails from './pages/QuestionDetails';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LoaderProvider, useLoader } from './contexts/LoaderContext';
@@ -30,6 +31,7 @@ const Layout = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/questions/:id" element={<QuestionDetails />} />
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
           </Route>

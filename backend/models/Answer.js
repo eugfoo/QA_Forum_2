@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+
 const Notification = require('./Notification');
 
 const AnswerSchema = new Schema({
     body: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     question: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
+    anonymous: { type: Boolean, default: false },  //
     votes: {
         up: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         down: [{ type: Schema.Types.ObjectId, ref: 'User' }]

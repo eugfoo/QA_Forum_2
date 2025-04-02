@@ -1,6 +1,7 @@
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 const postAnswer = async (req, res) => {
     try {
@@ -8,6 +9,11 @@ const postAnswer = async (req, res) => {
         const question = await Question.findById(questionId);
         if (!question) {
             return res.status(404).json({ error: 'Question not found' });
+        }
+        
+        // Prevent users from answering their own questions
+        if (question.user.toString() === req.session.user._id.toString()) {
+            return res.status(403).json({ error: 'You cannot answer your own question' });
         }
 
         // Check if user has already answered (if needed)
@@ -21,8 +27,8 @@ const postAnswer = async (req, res) => {
         const anonymousFlag =
             req.body.anonymous === true || req.body.anonymous === 'true';
 
-        // Optionally, if you want to prefix the body when anonymous:
-        const answerBody = anonymousFlag ? `[anon] ${req.body.body}` : req.body.body;
+        // Use the original body content without any prefix
+        const answerBody = req.body.body;
 
         const newAnswer = new Answer({
             body: answerBody,
@@ -62,6 +68,11 @@ const voteAnswer = async (req, res) => {
         const answer = await Answer.findById(answerId);
         if (!answer) {
             return res.status(404).json({ error: 'Answer not found' });
+        }
+        
+        // Prevent users from voting on their own answers
+        if (answer.user.toString() === voterId.toString()) {
+            return res.status(403).json({ error: 'You cannot vote on your own answer' });
         }
 
         let upvoteReceivedChange = 0;

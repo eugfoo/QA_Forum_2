@@ -118,8 +118,8 @@ const Navbar = ({ notifications: initialNotifications = [] }) => {
                                             {initialNotifications.length > 0 ? (
                                                 initialNotifications.map((notification) => {
                                                     let username = "Anonymous";
-                                                    if (notification.answer && notification.answer.body) {
-                                                        if (notification.answer.body.indexOf("[anon] ") === 0) {
+                                                    if (notification.answer) {
+                                                        if (notification.answer.anonymous) {
                                                             username = "Anonymous";
                                                         } else {
                                                             username =

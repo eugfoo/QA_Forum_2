@@ -78,20 +78,18 @@ const QuestionDetails = () => {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this question?')) {
-            try {
-                const response = await deleteQuestion(id);
-                if (response.status === 200) {
-                    toast.success('Question deleted successfully');
-                    navigate('/');
-                } else {
-                    const data = await response.json();
-                    toast.error(data.message || 'Failed to delete question');
-                }
-            } catch (error) {
-                console.error('Error deleting question:', error);
-                toast.error('Failed to delete question');
+        try {
+            const response = await deleteQuestion(id);
+            if (response.status === 200) {
+                toast.success('Question deleted successfully');
+                navigate('/');
+            } else {
+                const data = await response.json();
+                toast.error(data.message || 'Failed to delete question');
             }
+        } catch (error) {
+            console.error('Error deleting question:', error);
+            toast.error('Failed to delete question');
         }
     };
 
@@ -150,12 +148,25 @@ const QuestionDetails = () => {
                 <AnswerList questionId={id} isQuestionLocked={question.locked} refreshKey={answersRefresh} />
             </div>
 
-            {/* Fixed Answer Form */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
-                <div className="max-w-4xl mx-auto">
-                    <AnswerForm questionId={id} onAnswerSubmitted={refreshAnswers} />
+            {/* Fixed Answer Form - Don't show if user is the question owner */}
+            {currentUser && question && currentUser._id !== question.user._id && !question.locked && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
+                    <div className="max-w-4xl mx-auto">
+                        <AnswerForm questionId={id} onAnswerSubmitted={refreshAnswers} />
+                    </div>
                 </div>
-            </div>
+            )}
+            
+            {/* Message when user can't answer */}
+            {currentUser && question && currentUser._id === question.user._id && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
+                            You cannot answer your own question
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit Modal */}
             <EditQuestionModal

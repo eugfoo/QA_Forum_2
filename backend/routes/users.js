@@ -10,14 +10,17 @@ const {
     updateSettings,
     getCurrentUser
 } = require('../controllers/usersController');
-const {isLoggedIn} = require('../middleware/auth')
+const { auth } = require('../middleware/auth');
 
-router.get('/me', getCurrentUser);
+// Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);
-router.get('/profile', isLoggedIn, getProfile);
-router.put('/profile', updateProfile);
-router.put('/settings', updateSettings);
+
+// Protected routes - require authentication
+router.get('/me', auth, getCurrentUser);
+router.get('/profile', auth, getProfile);
+router.put('/profile', auth, updateProfile);
+router.put('/settings', auth, updateSettings);
 
 module.exports = router;

@@ -12,7 +12,7 @@ const {
     lockQuestion,
     unlockQuestion
 } = require('../controllers/questionsController');
-const { isLoggedIn } = require('../middleware/auth')
+const { auth } = require('../middleware/auth');
 
 
 // Route to search questions (using query parameter "q")
@@ -23,28 +23,28 @@ router.get('/', fetchAllQuestions);
 
 // (If you have a route for creating a question from your API, you could add it here as a POST route)
 // For example:
-router.post('/', isLoggedIn, createQuestion);
+router.post('/', auth, createQuestion);
 
 // Get question details by ID
 router.get('/:id', getQuestionDetails);
 
 // Update a question
-router.put('/:id', updateQuestion);
+router.put('/:id', auth, updateQuestion);
 
 // Delete a question
-router.delete('/:id', isLoggedIn, deleteQuestion);
+router.delete('/:id', auth, deleteQuestion);
 
 // Vote for a question
-router.post('/:id/vote', voteForQuestion);
+router.post('/:id/vote', auth, voteForQuestion);
 
 // Lock a question
-router.post('/:id/lock', lockQuestion);
+router.post('/:id/lock', auth, lockQuestion);
 
 // Unlock a question
-router.post('/:id/unlock', unlockQuestion);
+router.post('/:id/unlock', auth, unlockQuestion);
 
 const Answer = require('../models/Answer');
-router.get('/:id/answers', isLoggedIn, async (req, res) => {
+router.get('/:id/answers', async (req, res) => {
     try {
         const answers = await Answer.find({ question: req.params.id }).populate('user');
         return res.status(200).json(answers);

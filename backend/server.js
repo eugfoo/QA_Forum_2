@@ -1,10 +1,8 @@
 const express = require('express');
-const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const Question = require('./models/Question');
-
 
 dotenv.config();
 
@@ -14,15 +12,7 @@ const app = express();
 connectDB();
 
 // Middleware
-
 app.use(express.json());
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-    })
-);
 app.use(cors({
     origin: 'http://localhost:5173', // or wherever your frontend runs
     credentials: true

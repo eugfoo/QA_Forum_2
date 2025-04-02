@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { isLoggedIn } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const {
     postAnswer,
     voteAnswer,
@@ -12,18 +12,18 @@ const {
 
 
 // Submit an answer
-router.post('/:questionId', isLoggedIn, postAnswer);
+router.post('/:questionId', auth, postAnswer);
 
 // Vote for an answer
-router.post('/:answerId/vote', isLoggedIn, voteAnswer);
+router.post('/:answerId/vote', auth, voteAnswer);
 
 // Render edit form for an answer
-router.get('/:id/edit', isLoggedIn, getEditAnswer);
+router.get('/:id/edit', auth, getEditAnswer);
 
 // Update an answer
-router.post('/:id/update', isLoggedIn, updateAnswer);
+router.post('/:id/update', auth, updateAnswer);
 
 // Delete an answer
-router.get('/:id/delete', isLoggedIn, deleteAnswer);
+router.get('/:id/delete', auth, deleteAnswer);
 
 module.exports = router;

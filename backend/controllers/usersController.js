@@ -3,6 +3,15 @@ const User = require('../models/User');
 const { validateRegister, validatePasswordChange } = require('../utils/validators');
 const jwt = require('jsonwebtoken');
 
+// Generate JWT token
+const generateToken = (userId) => {
+    return jwt.sign(
+        { userId },
+        process.env.JWT_SECRET || 'your_jwt_secret',
+        { expiresIn: '30d' }
+    );
+};
+
 // Register a new user
 const registerUser = async (req, res) => {
     const { username, email, password, password2 } = req.body;
@@ -17,7 +26,22 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
         }
         const user = await new User({ username, email, password }).save();
-        return res.status(201).json({ message: 'User created', user });
+        
+        // Generate JWT token
+        const token = generateToken(user._id);
+        
+        return res.status(201).json({ 
+            message: 'User created', 
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                bio: user.bio,
+                profilePic: user.profilePic
+            },
+            token
+        });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
@@ -30,27 +54,36 @@ const loginUser = async (req, res) => {
         if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-        // Set the user on the session:
-        req.session.user = user;
-        return res.status(200).json({ message: 'Login successful', user });
+        
+        // Generate JWT token
+        const token = generateToken(user._id);
+        
+        return res.status(200).json({ 
+            message: 'Login successful', 
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                bio: user.bio,
+                profilePic: user.profilePic
+            },
+            token
+        });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
 };
 
-
-// Logout a user
+// Logout a user - with JWT, logout is handled client-side by removing the token
 const logoutUser = (req, res) => {
-    req.session.destroy((err) => {
-        if (err) return res.status(500).json({ error: 'Logout failed' });
-        return res.status(200).json({ message: 'Logout successful' });
-    });
+    return res.status(200).json({ message: 'Logout successful' });
 };
 
 // Get the profile of the logged-in user along with their activities
 const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.session.user._id).lean();
+        const user = await User.findById(req.user._id).lean();
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         const [questionsPosted, answersPosted] = await Promise.all([
@@ -74,33 +107,37 @@ const getProfile = async (req, res) => {
     }
 };
 
-// controllers/usersController.js
-// usersController.js
+// Get current user details
 const getCurrentUser = async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-
-        const user = await User.findById(req.session.user._id);
-
+        // req.user is already attached by the auth middleware
+        const user = req.user;
+        
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({ user });
+        res.json({ 
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                bio: user.bio,
+                profilePic: user.profilePic
+            }
+        });
     } catch (err) {
         console.error('Error fetching user:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-
 // Update the user's profile
 const updateProfile = async (req, res) => {
     try {
         const { username, bio } = req.body;
-        const user = await User.findById(req.session.user._id);
+        const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         user.username = username;
@@ -110,8 +147,18 @@ const updateProfile = async (req, res) => {
         }
 
         await user.save();
-        req.session.user = { ...req.session.user, username, bio, profilePic: user.profilePic };
-        return res.status(200).json({ message: 'Profile updated successfully', user });
+        
+        return res.status(200).json({ 
+            message: 'Profile updated successfully', 
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                bio: user.bio,
+                profilePic: user.profilePic
+            }
+        });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Error updating profile' });
     }
@@ -123,7 +170,7 @@ const updateSettings = async (req, res) => {
     let errors = validatePasswordChange(currentPassword, newPassword, confirmPassword);
     let user;
     try {
-        user = await User.findById(req.session.user._id);
+        user = await User.findById(req.user._id);
         if (!user) {
             errors.push({ msg: 'User not found' });
         } else {

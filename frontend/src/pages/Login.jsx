@@ -9,7 +9,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
-    const { setCurrentUser, isLoggingOut } = useContext(AuthContext);
+    const { login, isLoggingOut } = useContext(AuthContext);
     const hasShownToast = useRef(false);
 
     useEffect(() => {
@@ -32,15 +32,21 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await loginUser({ email, password });
-            const { user, message } = response.data;
+            const { user, token, message } = response.data;
             toast.success(message || 'Login successful');
 
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            setCurrentUser(user);
-            navigate('/');
+            // Use the login function from AuthContext
+            login(user, token);
+            
+            // Redirect to previous page or home
+            const redirectTo = location.state?.from?.pathname || '/';
+            navigate(redirectTo);
         } catch (error) {
             console.error('Login error:', error);
-            toast.error(error.response?.data?.error || 'Login failed');
+            // Only show toast if it's not a 401 error (which is already handled by the interceptor)
+            if (error.response?.status !== 401) {
+                toast.error(error.response?.data?.error || 'Login failed');
+            }
         }
     };
 

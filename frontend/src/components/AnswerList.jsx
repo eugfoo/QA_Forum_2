@@ -26,35 +26,23 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
 
     const handleVote = async (answerId, voteType) => {
         try {
-            const response = await voteAnswer(answerId, voteType);
-            if (response.status === 200) {
-                toast.success('Vote recorded successfully');
-                fetchAnswers();
-            } else {
-                const data = await response.json();
-                toast.error(data.message || 'Failed to record vote');
-            }
+            await voteAnswer(answerId, voteType);
+            toast.success('Vote recorded successfully');
+            fetchAnswers();
         } catch (error) {
             console.error('Error voting:', error);
-            toast.error('Failed to record vote');
+            toast.error(error.response?.data?.error || 'Failed to record vote');
         }
     };
 
     const handleDelete = async (answerId) => {
-        if (window.confirm('Are you sure you want to delete this answer?')) {
-            try {
-                const response = await deleteAnswer(answerId);
-                if (response.status === 200) {
-                    toast.success('Answer deleted successfully');
-                    fetchAnswers();
-                } else {
-                    const data = await response.json();
-                    toast.error(data.message || 'Failed to delete answer');
-                }
-            } catch (error) {
-                console.error('Error deleting answer:', error);
-                toast.error('Failed to delete answer');
-            }
+        try {
+            await deleteAnswer(answerId);
+            toast.success('Answer deleted successfully');
+            fetchAnswers();
+        } catch (error) {
+            console.error('Error deleting answer:', error);
+            toast.error(error.response?.data?.error || 'Failed to delete answer');
         }
     };
 

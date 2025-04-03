@@ -29,7 +29,7 @@ const QuestionCard = ({
             {/* Header: Title and MoreActions */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                    <h1 className="text-2xl font-bold text-blue-900">{question.title}</h1>
+                    <h1 className="text-lg font-bold text-blue-900">{question.title}</h1>
                     {question.locked && (
                         <div className="ml-2 bg-gray-100 text-gray-600 rounded-full px-2 py-1 flex items-center text-sm">
                             <FontAwesomeIcon icon={faLock} className="mr-1" />

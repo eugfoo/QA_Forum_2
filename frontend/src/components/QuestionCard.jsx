@@ -64,10 +64,8 @@ const QuestionCard = ({
                     ))}
                 </div>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
-                    <span>Asked by</span>
-                    <Link to={`/users/${question.user._id}`} className="text-blue-600 hover:underline ml-1">
-                        {question.user.username}
-                    </Link>
+                    <span>Asked by                         {question.user.username}
+                    </span>
                     <span className="mx-1">•</span>
                     <span>{format(new Date(question.createdAt), 'dd/MM/yyyy HH:mm')}</span>
                 </div>

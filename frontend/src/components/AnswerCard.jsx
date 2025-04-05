@@ -52,9 +52,9 @@ const AnswerCard = ({ answer, isQuestionLocked, onVote, onDelete, onEdit }) => {
                     {answer.anonymous ? (
                         <span className="text-gray-600">Anonymous</span>
                     ) : (
-                        <Link to={`/users/${answer.user._id}`} className="text-blue-600 hover:underline">
+                        <span>
                             {answer.user.username}
-                        </Link>
+                        </span>
                     )}
                     <span>•</span>
                     <span>{formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}</span>

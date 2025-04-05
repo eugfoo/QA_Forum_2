@@ -100,10 +100,53 @@ const getProfile = async (req, res) => {
         const user = await User.findById(req.user._id).lean();
         if (!user) return res.status(404).json({ error: 'User not found' });
 
+        const Question = require('../models/Question');
+        const Answer = require('../models/Answer');
+
+        // Get questions and answers posted by the user
         const [questionsPosted, answersPosted] = await Promise.all([
-            require('../models/Question').find({ user: user._id }).lean(),
-            require('../models/Answer').find({ user: user._id }).populate({ path: 'question', select: 'title' }).lean(),
+            Question.find({ user: user._id }).lean(),
+            Answer.find({ user: user._id }).populate({ path: 'question', select: 'title' }).lean(),
         ]);
+
+        // Count unique questions answered
+        const uniqueQuestionsAnswered = await Answer.aggregate([
+            { $match: { user: user._id } },
+            { $group: { _id: "$question" } },
+            { $count: "count" }
+        ]);
+        
+        // Get the count value or default to 0 if no results
+        const uniqueQuestionsCount = uniqueQuestionsAnswered.length > 0 
+            ? uniqueQuestionsAnswered[0].count 
+            : 0;
+
+        // Add counts to user object
+        user.questionsPostedCount = questionsPosted.length;
+        user.questionsAnsweredCount = uniqueQuestionsCount;
+        
+        // Calculate total upvotes
+        let totalUpvotes = 0;
+        
+        // Count upvotes from questions
+        if (questionsPosted.length > 0) {
+            const questionUpvotes = questionsPosted.reduce((total, question) => {
+                const upvotes = question.votes?.up?.length || 0;
+                return total + upvotes;
+            }, 0);
+            totalUpvotes += questionUpvotes;
+        }
+        
+        // Count upvotes from answers
+        if (answersPosted.length > 0) {
+            const answerUpvotes = answersPosted.reduce((total, answer) => {
+                const upvotes = answer.votes?.up?.length || 0;
+                return total + upvotes;
+            }, 0);
+            totalUpvotes += answerUpvotes;
+        }
+        
+        user.upvotesReceived = totalUpvotes;
 
         const activities = [
             ...questionsPosted.map(q => ({ ...q, type: 'question' })),
@@ -138,20 +181,31 @@ const getCurrentUser = async (req, res) => {
         const Question = require('../models/Question');
         const Answer = require('../models/Answer');
 
-        const [questionsCount, answersCount, questions] = await Promise.all([
-            Question.countDocuments({ user: user._id }),
-            Answer.countDocuments({ user: user._id }),
-            Question.find({ user: user._id }) // To calculate upvotes
+        // Count questions posted by user
+        const questionsCount = await Question.countDocuments({ user: user._id });
+        
+        // Count unique questions answered by user
+        const uniqueQuestionsAnswered = await Answer.aggregate([
+            { $match: { user: user._id } },
+            { $group: { _id: "$question" } },
+            { $count: "count" }
         ]);
+        
+        // Get the count value or default to 0 if no results
+        const answersCount = uniqueQuestionsAnswered.length > 0 
+            ? uniqueQuestionsAnswered[0].count 
+            : 0;
+            
+        // Get questions to calculate upvotes
+        const questions = await Question.find({ user: user._id });
 
         // Calculate total upvotes received on questions
         let totalUpvotes = 0;
         if (questions.length > 0) {
             totalUpvotes = questions.reduce((total, question) => {
-                // Calculate net upvotes (upvotes - downvotes)
-                const questionUpvotes = (question.upvotes || []).length;
-                const questionDownvotes = (question.downvotes || []).length;
-                return total + (questionUpvotes - questionDownvotes);
+                // Get upvotes from the votes structure (only count upvotes, not downvotes)
+                const upvotes = question.votes?.up?.length || 0;
+                return total + upvotes;
             }, 0);
         }
 
@@ -159,9 +213,9 @@ const getCurrentUser = async (req, res) => {
         const answers = await Answer.find({ user: user._id });
         if (answers.length > 0) {
             const answerUpvotes = answers.reduce((total, answer) => {
-                const upvotes = (answer.upvotes || []).length;
-                const downvotes = (answer.downvotes || []).length;
-                return total + (upvotes - downvotes);
+                // Get upvotes from the votes structure (only count upvotes, not downvotes)
+                const upvotes = answer.votes?.up?.length || 0;
+                return total + upvotes;
             }, 0);
             totalUpvotes += answerUpvotes;
         }

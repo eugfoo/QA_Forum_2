@@ -1,6 +1,6 @@
 // src/pages/QuestionDetails.jsx
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { voteQuestion, deleteQuestion, getQuestion, unlockQuestion, lockQuestion } from '../services/api';
 import { toast } from 'react-toastify';
@@ -11,15 +11,26 @@ import AnswerForm from '../components/AnswerForm';
 import EditQuestionModal from '../components/EditQuestionModal';
 import QuestionCard from '../components/QuestionCard';
 import { AuthContext } from '../contexts/AuthContext';
+import { NotificationContext } from '../contexts/NotificationContext';
 
 const QuestionDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { currentUser } = useContext(AuthContext);
+    const { refreshNotifications } = useContext(NotificationContext);
     const [question, setQuestion] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [answersRefresh, setAnswersRefresh] = useState(0);
+
+    // Refresh notifications when the component mounts to update notification state
+    // This helps when accessing the question directly via a notification link
+    useEffect(() => {
+        if (currentUser) {
+            refreshNotifications();
+        }
+    }, [currentUser, id]);
 
     useEffect(() => {
         fetchQuestion();

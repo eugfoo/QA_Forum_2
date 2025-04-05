@@ -32,29 +32,44 @@ const CreateQuestionModal = ({ onClose, onSuccess }) => {
                 </button>
                 <h2 className="text-xl font-bold mb-4">Ask a Question</h2>
                 <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        placeholder="Title"
-                        className="w-full mb-3 p-2 border rounded"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                    />
-                    <textarea
-                        placeholder="Body"
-                        className="w-full mb-3 p-2 border rounded"
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        rows={4}
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Tags (comma separated)"
-                        className="w-full mb-3 p-2 border rounded"
-                        value={tags}
-                        onChange={(e) => setTags(e.target.value)}
-                    />
+                    <div className="mb-3">
+                        <label htmlFor="title" className="block text-gray-700 font-medium mb-1">Question Title</label>
+                        <input
+                            id="title"
+                            type="text"
+                            placeholder="Enter your question title"
+                            className="w-full p-2 border rounded"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            required
+                        />
+                    </div>
+                    
+                    <div className="mb-3">
+                        <label htmlFor="body" className="block text-gray-700 font-medium mb-1">Description</label>
+                        <textarea
+                            id="body"
+                            placeholder="Provide details about your question"
+                            className="w-full p-2 border rounded"
+                            value={body}
+                            onChange={(e) => setBody(e.target.value)}
+                            rows={4}
+                            required
+                        />
+                    </div>
+                    
+                    <div className="mb-4">
+                        <label htmlFor="tags" className="block text-gray-700 font-medium mb-1">Tags</label>
+                        <input
+                            id="tags"
+                            type="text"
+                            placeholder="Tags (comma separated)"
+                            className="w-full p-2 border rounded"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                        />
+                    </div>
+                    
                     <button
                         type="submit"
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"

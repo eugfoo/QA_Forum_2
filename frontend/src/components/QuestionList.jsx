@@ -106,6 +106,28 @@ const QuestionList = ({ refreshKey }) => {
         return <Loader />;
     }
 
+    // Custom message for empty state based on view
+    const getEmptyStateMessage = () => {
+        if (view === 'myProfile') {
+            return (
+                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                    <p className="text-gray-600 font-medium">You haven't asked any questions yet.</p>
+                    <button
+                        onClick={() => document.getElementById('createQuestionButton')?.click()}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                    >
+                        Ask Your First Question
+                    </button>
+                </div>
+            );
+        }
+        return (
+            <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                <p className="text-gray-500">No questions found.</p>
+            </div>
+        );
+    };
+
     return (
         <div className={`space-y-4 ${fade ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
             {search && (
@@ -129,9 +151,7 @@ const QuestionList = ({ refreshKey }) => {
             )}
             
             {questions.length === 0 && !search ? (
-                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-                    <p className="text-gray-500">No questions found.</p>
-                </div>
+                getEmptyStateMessage()
             ) : (
                 questions.map((question) => (
                     <QuestionCard

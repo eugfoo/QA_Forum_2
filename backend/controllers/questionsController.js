@@ -2,6 +2,7 @@ const Question = require('../models/Question');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const Answer = require('../models/Answer');
+const jwt = require('jsonwebtoken');
 
 const fetchAllQuestions = async (req, res, next) => {
     try {
@@ -11,8 +12,33 @@ const fetchAllQuestions = async (req, res, next) => {
         console.log(`Fetching questions with filter=${filter}, view=${view}, search=${search}`);
 
         let query = {};
-        if (view === 'myProfile' && req.user) {
-            query.user = req.user._id;
+        
+        // Handle myProfile view - check for user either from auth middleware or token
+        if (view === 'myProfile') {
+            // If req.user exists (auth middleware was used), use it
+            if (req.user) {
+                query.user = req.user._id;
+            } 
+            // Otherwise try to extract user from Authorization header
+            else {
+                const authHeader = req.header('Authorization');
+                if (authHeader) {
+                    const token = authHeader.replace('Bearer ', '');
+                    try {
+                        const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
+                        const decoded = jwt.verify(token, jwtSecret);
+                        if (decoded.userId) {
+                            query.user = decoded.userId;
+                        }
+                    } catch (error) {
+                        // Invalid token - just return no questions
+                        return res.status(200).json({ questions: [] });
+                    }
+                } else {
+                    // No auth header - return empty array for myProfile view
+                    return res.status(200).json({ questions: [] });
+                }
+            }
         }
 
         if (search) {
@@ -262,10 +288,12 @@ const voteForQuestion = async (req, res) => {
                 question.votes.down.pull(userId);
                 voteChange = -1;
             } else {
-                if (isUpvoted) question.votes.up.pull(userId);
+                if (isUpvoted) {
+                    question.votes.up.pull(userId);
+                    upvoteReceivedChange = -1;
+                }
                 question.votes.down.push(userId);
                 voteChange = isUpvoted ? 0 : 1;
-                upvoteReceivedChange = -1;
             }
         } else {
             return res.status(400).json({ error: 'Invalid vote type.' });

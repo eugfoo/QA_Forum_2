@@ -1,27 +1,64 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import { NotificationContext } from '../contexts/NotificationContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
 const Navbar = () => {
-    const { currentUser, logout, setLogoutInProgress } = useContext(AuthContext);
+    const { currentUser, logout } = useContext(AuthContext);
+    const { 
+        notifications, 
+        notificationCount, 
+        loading: notificationsLoading, 
+        markAllAsRead,
+        refreshNotifications,
+        setNotifications,
+        setNotificationCount 
+    } = useContext(NotificationContext);
+    
     const navigate = useNavigate();
+    const location = useLocation();
+    
     // State for notifications dropdown
     const [isNotiOpen, setIsNotiOpen] = useState(false);
-    // State for notifications
-    const [notifications, setNotifications] = useState([]);
-    const [notificationCount, setNotificationCount] = useState(0);
-    const [loading, setLoading] = useState(false);
     const notificationDropdownRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Refresh notifications when route changes
+    useEffect(() => {
+        if (currentUser) {
+            refreshNotifications();
+        }
+    }, [location.pathname, currentUser]);
 
     // Toggle notifications dropdown on click
     const handleNotificationClick = (e) => {
         e.stopPropagation();
         setIsNotiOpen(!isNotiOpen);
+    };
+
+    // Handle notification item click
+    const handleNotificationItemClick = (notificationId) => {
+        // Update the UI immediately
+        setNotifications(prev => 
+            prev.map(notification => 
+                notification._id === notificationId 
+                    ? { ...notification, read: true } 
+                    : notification
+            )
+        );
+        
+        // Recalculate unread count
+        const updatedUnreadCount = notifications
+            .filter(n => n._id !== notificationId && !n.read)
+            .length;
+        setNotificationCount(updatedUnreadCount);
+        
+        // Close the dropdown
+        setIsNotiOpen(false);
     };
 
     // Close dropdown when clicking outside
@@ -36,21 +73,16 @@ const Navbar = () => {
                 
                 // Mark notifications as read when closing the dropdown
                 if (notificationCount > 0) {
+                    // Immediately update UI
+                    setNotificationCount(0);
+                    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                    
+                    // Then call API in background
                     try {
-                        // Mark all notifications as read in the API
-                        const response = await api.put('/users/notifications/read', {});
-                        
-                        // Update the notification count after API call succeeds
-                        setNotificationCount(0);
-                        
-                        // Update the notification objects in state to show as read
-                        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                        await markAllAsRead();
                     } catch (error) {
-                        // If API call fails, restore the notification count
-                        fetchNotifications();
-                        
-                        // Show error toast
-                        toast.error('Failed to mark notifications as read. Please try again later.');
+                        // If API call fails, refresh to get accurate count
+                        refreshNotifications();
                     }
                 }
             }
@@ -58,51 +90,6 @@ const Navbar = () => {
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
     }, [isNotiOpen, notificationCount]);
-
-    // Fetch notifications when component mounts or when currentUser changes
-    useEffect(() => {
-        if (currentUser) {
-            fetchNotifications();
-        }
-    }, [currentUser]);
-
-    // Periodically refresh notifications every 30 seconds
-    useEffect(() => {
-        if (!currentUser) return;
-        
-        // Initial fetch
-        fetchNotifications();
-        
-        // Set up interval to fetch notifications
-        const intervalId = setInterval(() => {
-            fetchNotifications();
-        }, 30000); // 30 seconds
-        
-        // Clean up interval on unmount
-        return () => clearInterval(intervalId);
-    }, [currentUser]);
-
-    // Fetch notifications from the API
-    const fetchNotifications = async () => {
-        if (!currentUser) return;
-        
-        try {
-            setLoading(true);
-            const response = await api.get('/users/notifications');
-            const notificationsData = response.data || [];
-            setNotifications(notificationsData);
-            
-            // Count unread notifications
-            const unreadCount = notificationsData.filter(n => n.read === false).length;
-            setNotificationCount(unreadCount);
-        } catch (error) {
-            // Reset notifications to empty array in case of error
-            setNotifications([]);
-            setNotificationCount(0);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleLogout = async () => {
         try {
@@ -185,7 +172,7 @@ const Navbar = () => {
                                         className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg"
                                     >
                                         <div id="notificationList" className="max-h-64 overflow-y-auto py-2 custom-scrollbar">
-                                            {loading ? (
+                                            {notificationsLoading ? (
                                                 <p className="px-4 py-2 text-sm text-gray-500 text-center">
                                                     Loading notifications...
                                                 </p>
@@ -207,10 +194,7 @@ const Navbar = () => {
                                                             key={notification._id}
                                                             to={`/questions/${notification.question._id}`}
                                                             className={`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${highlightClass}`}
-                                                            onClick={() => {
-                                                                // Close the dropdown when notification is clicked
-                                                                setIsNotiOpen(false);
-                                                            }}
+                                                            onClick={() => handleNotificationItemClick(notification._id)}
                                                         >
                                                             <div className="flex items-start">
                                                                 <div className="flex-grow">

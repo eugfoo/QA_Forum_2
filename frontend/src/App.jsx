@@ -18,6 +18,7 @@ import Notifications from './pages/Notifications';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LoaderProvider, useLoader } from './contexts/LoaderContext';
+import NotificationProvider from './contexts/NotificationContext';
 
 const Layout = () => {
   const { loading } = useLoader();
@@ -52,19 +53,22 @@ function App() {
   return (
     <AuthProvider>
       <LoaderProvider>
-        <Router>
-          <Layout />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            style={{ top: '80px' }}
-            newestOnTop
-            closeOnClick
-            pauseOnHover
-            draggable
-            theme="colored"
-          />        </Router>
+        <NotificationProvider>
+          <Router>
+            <Layout />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              style={{ top: '80px' }}
+              newestOnTop
+              closeOnClick
+              pauseOnHover
+              draggable
+              theme="colored"
+            />
+          </Router>
+        </NotificationProvider>
       </LoaderProvider>
     </AuthProvider>
   );

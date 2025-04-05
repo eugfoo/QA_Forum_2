@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
-import api from '../services/api';
-import { toast } from 'react-toastify';
+import { NotificationContext } from '../contexts/NotificationContext';
 
 const Notifications = () => {
-    const { currentUser } = useContext(AuthContext);
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { 
+        notifications, 
+        loading, 
+        markAllAsRead, 
+        refreshNotifications 
+    } = useContext(NotificationContext);
+    
     const timelineRef = useRef(null);
     const [currentDateGroup, setCurrentDateGroup] = useState('');
     const [scrollProgress, setScrollProgress] = useState(0);
     
     useEffect(() => {
-        if (currentUser) {
-            fetchNotifications();
-        }
-    }, [currentUser]);
+        // Refresh notifications when component mounts
+        refreshNotifications();
+    }, []);
 
     // Add scroll event listener to track which date section is currently in view
     useEffect(() => {
@@ -65,32 +66,6 @@ const Notifications = () => {
             }
         };
     }, [notifications]);
-
-    const fetchNotifications = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get('/users/notifications');
-            setNotifications(response.data || []);
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-            toast.error('Failed to load notifications. Please try again later.');
-            setNotifications([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const markAllAsRead = async () => {
-        try {
-            await api.put('/users/notifications/read', {});
-            toast.success('All notifications marked as read');
-            // Update local state to show all notifications as read
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        } catch (error) {
-            console.error('Error marking notifications as read:', error);
-            toast.error('Failed to mark notifications as read');
-        }
-    };
 
     // Function to group notifications by date
     const groupNotificationsByDate = () => {
@@ -149,7 +124,7 @@ const Notifications = () => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
             {loading ? (
                 <div className="text-center py-16 bg-white rounded-xl shadow-lg">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-r-4 border-blue-300 border-b-4 border-blue-200 border-l-4 border-blue-300"></div>

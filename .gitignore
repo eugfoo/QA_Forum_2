@@ -7,7 +7,7 @@ backend/node_modules/
 frontend/dist/
 backend/build/
 
-# Uploaded content
+# Uploaded content (ignore contents but keep directory)
 backend/uploads/*
 !backend/uploads/.gitkeep
 

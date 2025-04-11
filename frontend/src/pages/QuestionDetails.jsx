@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import AnswerList from '../components/AnswerList';
 import AnswerForm from '../components/AnswerForm';
-import EditQuestionModal from '../components/EditQuestionModal';
 import QuestionCard from '../components/QuestionCard';
 import { AuthContext } from '../contexts/AuthContext';
 import { NotificationContext } from '../contexts/NotificationContext';
@@ -19,7 +18,6 @@ const QuestionDetails = () => {
     const { refreshNotifications } = useContext(NotificationContext);
     const [question, setQuestion] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [answersRefresh, setAnswersRefresh] = useState(0);
 
     useEffect(() => {
@@ -59,12 +57,11 @@ const QuestionDetails = () => {
         }
     };
 
-    const handleSaveEdit = async (editedData) => {
+    const handleEdit = async (editedData) => {
         try {
             const response = await editQuestion(id, editedData);
             if (response.data) {
                 toast.success('Question updated successfully');
-                setIsEditModalOpen(false);
                 fetchQuestion();
             } else {
                 toast.error('Failed to update question');
@@ -72,6 +69,7 @@ const QuestionDetails = () => {
         } catch (error) {
             console.error('Error updating question:', error);
             toast.error(error.response?.data?.error || 'Failed to update question');
+            throw error;
         }
     };
 
@@ -134,7 +132,7 @@ const QuestionDetails = () => {
                     currentUser={currentUser}
                     onCardClick={() => { }}
                     onVote={(questionId, voteType, e) => handleVote(questionId, voteType, e)}
-                    onEdit={() => setIsEditModalOpen(true)}
+                    onEdit={handleEdit}
                     onLock={() => handleLock(question.locked)}
                     onDelete={handleDelete}
                 />
@@ -169,13 +167,6 @@ const QuestionDetails = () => {
                     </div>
                 </div>
             )}
-
-            <EditQuestionModal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                onSave={handleSaveEdit}
-                question={question}
-            />
         </>
     );
 };

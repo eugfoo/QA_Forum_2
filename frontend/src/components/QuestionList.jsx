@@ -109,7 +109,7 @@ const QuestionList = ({ refreshKey }) => {
     // Custom message for empty state based on view
     const getEmptyStateMessage = () => {
         if (view === 'myProfile') {
-            return (
+    return (
                 <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
                     <p className="text-gray-600 font-medium">You haven't asked any questions yet.</p>
                 </div>
@@ -134,13 +134,13 @@ const QuestionList = ({ refreshKey }) => {
                         ) : (
                             <p className="text-gray-500 mt-1">Found {questions.length} matching questions</p>
                         )}
-                    </div>
+                                </div>
                     <button 
                         onClick={() => navigate(`/?filter=${filter}&view=${view}`)}
                         className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm"
                     >
                         Clear Search
-                    </button>
+                                            </button>
                 </div>
             )}
             

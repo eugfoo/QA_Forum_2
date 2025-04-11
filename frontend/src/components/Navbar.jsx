@@ -27,6 +27,15 @@ const Navbar = () => {
     useEffect(() => {
         if (currentUser) {
             refreshNotifications();
+            
+            // Mark notifications as read when navigating to a different page
+            if (notificationCount > 0) {
+                setNotificationCount(0);
+                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                markAllAsRead().catch(() => {
+                    refreshNotifications();
+                });
+            }
         }
     }, [location.pathname, currentUser]);
 
@@ -35,7 +44,7 @@ const Navbar = () => {
         setIsNotiOpen(!isNotiOpen);
     };
 
-    const handleNotificationItemClick = (notificationId) => {
+    const handleNotificationItemClick = async (notificationId) => {
         setNotifications(prev =>
             prev.map(notification =>
                 notification._id === notificationId
@@ -43,12 +52,20 @@ const Navbar = () => {
                     : notification
             )
         );
+        
         const updatedUnreadCount = notifications
             .filter(n => n._id !== notificationId && !n.read)
             .length;
         setNotificationCount(updatedUnreadCount);
-
+        
         setIsNotiOpen(false);
+        
+        try {
+            await markAllAsRead();
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+            refreshNotifications();
+        }
     };
 
     useEffect(() => {
@@ -84,7 +101,7 @@ const Navbar = () => {
                 });
 
                 navigate('/');
-                toast.success('You have been logged out.');
+            toast.success('You have been logged out.');
             } else {
                 toast.error('Failed to log out. Please try again.');
             }
@@ -178,10 +195,10 @@ const Navbar = () => {
                                                         >
                                                             <div className="flex items-start">
                                                                 <div className="flex-grow">
-                                                                    <p>
-                                                                        <strong>{username}</strong> answered your question:{" "}
-                                                                        <strong>"{notification.question.title}"</strong>
-                                                                    </p>
+                                                            <p>
+                                                                <strong>{username}</strong> answered your question:{" "}
+                                                                <strong>"{notification.question.title}"</strong>
+                                                            </p>
                                                                     <p className="text-xs text-gray-500 mt-1">
                                                                         {new Date(notification.createdAt).toLocaleString()}
                                                                     </p>

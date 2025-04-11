@@ -51,14 +51,14 @@ api.interceptors.response.use(
                 localStorage.removeItem('currentUser');
 
                 if (!window.location.pathname.includes('/login')) {
-                    window.location.href = '/login';
+            window.location.href = '/login';
                 }
             }
         }
 
         return Promise.reject(err);
     }
-);
+); 
 
 // User-related API functions
 export const loginUser = (credentials) => api.post('/users/login', credentials);

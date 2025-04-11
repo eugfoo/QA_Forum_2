@@ -15,7 +15,7 @@ const CreateQuestionModal = ({ onClose, onSuccess }) => {
             await createQuestion({ title, body, tags });
             toast.success('Question posted successfully!');
             onClose();
-            onSuccess(); // 👈 trigger refresh
+            onSuccess();
         } catch (err) {
             toast.error('Failed to post question.');
         }

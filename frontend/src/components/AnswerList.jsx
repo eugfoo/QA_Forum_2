@@ -13,7 +13,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
         fetchAnswers();
     }, [questionId, refreshKey]);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             const dropdown = document.getElementById('sort-dropdown');
@@ -30,7 +29,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
         };
     }, []);
 
-    // Re-sort answers when sortBy changes
     useEffect(() => {
         if (answers.length > 0) {
             const sortedAnswers = [...answers];
@@ -108,7 +106,6 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
         );
     }
 
-    // Mapping for sort option icons and text
     const sortOptions = [
         { key: 'latest', label: 'Latest', icon: 'fa-clock' },
         { key: 'oldest', label: 'Oldest', icon: 'fa-hourglass-end' },

@@ -1,8 +1,6 @@
-// src/pages/QuestionDetails.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { format } from 'date-fns';
-import { voteQuestion, deleteQuestion, getQuestion, unlockQuestion, lockQuestion } from '../services/api';
+import { voteQuestion, deleteQuestion, getQuestion, unlockQuestion, lockQuestion, editQuestion } from '../services/api';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
@@ -24,8 +22,6 @@ const QuestionDetails = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [answersRefresh, setAnswersRefresh] = useState(0);
 
-    // Refresh notifications when the component mounts to update notification state
-    // This helps when accessing the question directly via a notification link
     useEffect(() => {
         if (currentUser) {
             refreshNotifications();
@@ -47,10 +43,10 @@ const QuestionDetails = () => {
         }
     };
 
-    const handleVote = async (voteType, e) => {
+    const handleVote = async (questionId, voteType, e) => {
         e.stopPropagation();
         try {
-            const response = await voteQuestion(id, voteType);
+            const response = await voteQuestion(questionId, voteType);
             if (response.status === 200) {
                 toast.success('Vote recorded successfully');
                 fetchQuestion();
@@ -63,27 +59,19 @@ const QuestionDetails = () => {
         }
     };
 
-    const handleEdit = () => {
-        setIsEditModalOpen(true);
-    };
-
     const handleSaveEdit = async (editedData) => {
         try {
-            const response = await fetch(`/api/questions/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editedData),
-            });
-            if (response.ok) {
+            const response = await editQuestion(id, editedData);
+            if (response.data) {
                 toast.success('Question updated successfully');
                 setIsEditModalOpen(false);
                 fetchQuestion();
             } else {
-                const data = await response.json();
-                toast.error(data.message || 'Failed to update question');
+                toast.error('Failed to update question');
             }
         } catch (error) {
-            toast.error('Failed to update question');
+            console.error('Error updating question:', error);
+            toast.error(error.response?.data?.error || 'Failed to update question');
         }
     };
 
@@ -117,7 +105,6 @@ const QuestionDetails = () => {
         }
     };
 
-    // Callback to refresh AnswerList when a new answer is submitted
     const refreshAnswers = () => setAnswersRefresh(prev => prev + 1);
 
     if (loading) {
@@ -146,15 +133,14 @@ const QuestionDetails = () => {
                     question={question}
                     currentUser={currentUser}
                     onCardClick={() => { }}
-                    onVote={handleVote}
-                    onEdit={(editedData) => handleEdit(question._id, editedData)}
+                    onVote={(questionId, voteType, e) => handleVote(questionId, voteType, e)}
+                    onEdit={() => setIsEditModalOpen(true)}
                     onLock={() => handleLock(question.locked)}
                     onDelete={handleDelete}
                 />
                 <AnswerList questionId={id} isQuestionLocked={question.locked} refreshKey={answersRefresh} />
             </div>
 
-            {/* Fixed Answer Form - Don't show if user is the question owner or if question is locked */}
             {currentUser && question && currentUser._id !== question.user._id && !question.locked && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
                     <div className="max-w-4xl mx-auto">
@@ -163,7 +149,6 @@ const QuestionDetails = () => {
                 </div>
             )}
             
-            {/* Message when user can't answer */}
             {currentUser && question && currentUser._id === question.user._id && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
                     <div className="max-w-4xl mx-auto">
@@ -174,7 +159,6 @@ const QuestionDetails = () => {
                 </div>
             )}
 
-            {/* Message when question is locked */}
             {currentUser && question && question.locked && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-md">
                     <div className="max-w-4xl mx-auto">
@@ -186,7 +170,6 @@ const QuestionDetails = () => {
                 </div>
             )}
 
-            {/* Edit Modal */}
             <EditQuestionModal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}

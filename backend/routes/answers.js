@@ -7,7 +7,7 @@ const {
     getEditAnswer,
     updateAnswer,
     deleteAnswer,
-    getAnswersForQuestion  // import the new handler
+    getAnswersForQuestion
 } = require('../controllers/answersController');
 
 

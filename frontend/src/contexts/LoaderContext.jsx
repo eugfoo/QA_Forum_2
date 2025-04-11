@@ -1,4 +1,3 @@
-// src/contexts/LoaderContext.jsx
 import { createContext, useState, useContext } from 'react';
 
 export const LoaderContext = createContext();

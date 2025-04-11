@@ -15,7 +15,6 @@ const QuestionCard = ({
     onEdit = () => { },
     onLock = () => { },
     onDelete = () => { },
-    // You can also pass additional props if needed
 }) => {
     const isUpvoted =
         currentUser && question.votes.up.some(uid => uid.toString() === currentUser._id.toString());
@@ -26,7 +25,6 @@ const QuestionCard = ({
 
     return (
         <div className="bg-white p-4 rounded-lg shadow relative cursor-pointer" onClick={onCardClick}>
-            {/* Header: Title and MoreActions */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
                     <h1 className="text-lg font-bold text-blue-900">{question.title}</h1>
@@ -46,14 +44,13 @@ const QuestionCard = ({
                             onLock={onLock}
                             onDelete={onDelete}
                             questionTitle={question.title}
-                            question={question} // indicates it's a question
+                            question={question}
                         />
 
                     </div>
                 )}
             </div>
 
-            {/* Content: Body, Tags, Metadata */}
             <div className="mt-4">
                 <p className="text-gray-800 whitespace-pre-wrap">{question.body}</p>
                 <div className="flex flex-wrap gap-2 mt-4">
@@ -71,7 +68,6 @@ const QuestionCard = ({
                 </div>
             </div>
 
-            {/* Voting Panel at Bottom Right */}
             <div className="absolute bottom-2 right-2 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
                 {canVote ? (
                     <>

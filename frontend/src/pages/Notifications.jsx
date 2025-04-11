@@ -15,25 +15,20 @@ const Notifications = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
     
     useEffect(() => {
-        // Refresh notifications when component mounts
         refreshNotifications();
     }, []);
 
-    // Add scroll event listener to track which date section is currently in view
     useEffect(() => {
         const handleScroll = () => {
             if (!timelineRef.current) return;
             
-            // Calculate scroll progress
             const { scrollTop, scrollHeight, clientHeight } = timelineRef.current;
             const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
             setScrollProgress(progress);
             
-            // Get all date sections
             const dateSections = document.querySelectorAll('[id^="date-"]');
             if (dateSections.length === 0) return;
             
-            // Find the date section that's currently most visible
             let currentSection = dateSections[0];
             let closestDistance = Infinity;
             
@@ -47,7 +42,6 @@ const Notifications = () => {
                 }
             });
             
-            // Update the current date group
             const dateId = currentSection.id;
             const dateGroup = dateId.replace('date-', '');
             setCurrentDateGroup(dateGroup);
@@ -56,7 +50,6 @@ const Notifications = () => {
         const timelineElement = timelineRef.current;
         if (timelineElement) {
             timelineElement.addEventListener('scroll', handleScroll);
-            // Initialize with initial scroll position
             handleScroll();
         }
         
@@ -67,7 +60,6 @@ const Notifications = () => {
         };
     }, [notifications]);
 
-    // Function to group notifications by date
     const groupNotificationsByDate = () => {
         const grouped = {};
         
@@ -98,7 +90,6 @@ const Notifications = () => {
             grouped[dateKey].push(notification);
         });
         
-        // Sort notifications within each group by most recent first
         Object.keys(grouped).forEach(key => {
             grouped[key].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         });
@@ -108,11 +99,8 @@ const Notifications = () => {
 
     const groupedNotifications = groupNotificationsByDate();
     const hasUnreadNotifications = notifications.some(n => !n.read);
-
-    // Use a consistent blue gradient instead of random gradients
     const blueGradient = 'from-blue-100 to-indigo-100';
 
-    // Function to scroll to a specific date section
     const scrollToDate = (dateGroup) => {
         const element = document.getElementById(`date-${dateGroup}`);
         if (element && timelineRef.current) {
@@ -132,7 +120,6 @@ const Notifications = () => {
                 </div>
             ) : notifications.length > 0 ? (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden relative">
-                    {/* Progress bar at the top */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100">
                         <div 
                             className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-out"
@@ -140,7 +127,6 @@ const Notifications = () => {
                         ></div>
                     </div>
                     
-                    {/* Current date indicator (sticky at the top) */}
                     <div className="sticky top-0 bg-white z-20 py-3 px-4 mt-1 mb-4 flex items-center justify-between border-b border-gray-200 shadow-sm">
                         <div className="flex items-center">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mr-3 shadow-md animate-pulse">
@@ -187,19 +173,16 @@ const Notifications = () => {
                         </div>
                     </div>
                     
-                    {/* Timeline with scrollbar */}
                     <div 
                         ref={timelineRef}
                         className="relative overflow-y-auto custom-scrollbar px-4 pb-4" 
                         style={{ height: '600px' }}
                     >
-                        {/* Main timeline line */}
                         <div className="absolute left-9 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-200 via-indigo-300 to-purple-200 rounded-full"></div>
                         
                         <div className="space-y-8">
                             {Object.entries(groupedNotifications).map(([dateGroup, groupNotifications], groupIndex) => (
                                 <div key={dateGroup} id={`date-${dateGroup}`} className="relative fade-in">
-                                    {/* Date header */}
                                     <div className="flex items-center mb-6 relative z-10">
                                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mr-4 shadow-md transform transition hover:scale-110">
                                             <i className="fas fa-calendar-day text-white"></i>
@@ -208,7 +191,6 @@ const Notifications = () => {
                                         <div className="border-b-2 border-dashed border-gray-200 flex-grow ml-2"></div>
                                     </div>
                                     
-                                    {/* Notifications for this date */}
                                     <div className="space-y-6 ml-2 mb-10">
                                         {groupNotifications.map((notification, index) => {
                                             let username = "Anonymous";
@@ -220,7 +202,6 @@ const Notifications = () => {
                                                 }
                                             }
                                             
-                                            // Add a staggered animation delay based on index
                                             const animationDelay = `${index * 0.05}s`;
                                             
                                             return (
@@ -236,19 +217,16 @@ const Notifications = () => {
                                                             ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500' 
                                                             : 'bg-white hover:bg-gradient-to-r hover:' + blueGradient}`}
                                                     >
-                                                        {/* Timeline dot */}
                                                         <div className={`absolute left-8 top-6 w-4 h-4 rounded-full border-4 ${
                                                             !notification.read 
                                                                 ? 'bg-blue-500 border-white pulse-dot' 
                                                                 : 'bg-white border-gray-300'}`}
                                                         ></div>
                                                         
-                                                        {/* Icon */}
                                                         <div className="absolute left-1 top-3 h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-md transform transition-transform duration-300 hover:rotate-3">
                                                             <i className="fas fa-comment-dots text-blue-700"></i>
                                                         </div>
                                                         
-                                                        {/* Content */}
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center flex-wrap">
                                                                 <span className="font-semibold text-indigo-900">{username}</span>
@@ -289,13 +267,9 @@ const Notifications = () => {
                     </div>
                     <h3 className="text-xl font-bold text-gray-800">No notifications yet</h3>
                     <p className="text-gray-600 mt-2 max-w-sm mx-auto">When someone answers your questions, you'll see their responses here in your notification timeline</p>
-                    <Link to="/" className="mt-6 inline-block px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
-                        Ask a Question
-                    </Link>
                 </div>
             )}
 
-            {/* Add CSS for custom scrollbar and animations */}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 8px;

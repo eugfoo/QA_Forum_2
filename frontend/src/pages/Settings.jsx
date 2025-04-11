@@ -24,7 +24,6 @@ const Settings = () => {
         setLoading(true);
 
         try {
-            // Client-side validation
             if (formData.newPassword !== formData.confirmPassword) {
                 toast.error('New passwords do not match');
                 setLoading(false);
@@ -47,7 +46,6 @@ const Settings = () => {
         } catch (error) {
             console.error('Error updating password:', error);
             if (error.response?.data?.errors) {
-                // Display each error from the server as a toast
                 error.response.data.errors.forEach(err => {
                     toast.error(err.msg);
                 });

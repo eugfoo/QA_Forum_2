@@ -7,7 +7,6 @@ const EditProfileForm = ({ user, onSubmit }) => {
     const profilePhotoRef = useRef();
 
     useEffect(() => {
-        // Update preview if user data changes
         setProfilePreview(user.profilePic || '/default-avatar.png');
     }, [user]);
 
@@ -30,7 +29,7 @@ const EditProfileForm = ({ user, onSubmit }) => {
         if (profilePhotoRef.current.files[0]) {
             formData.append('profilePhoto', profilePhotoRef.current.files[0]);
         }
-        onSubmit(formData); // parent handles submission
+        onSubmit(formData);
     };
 
     return (

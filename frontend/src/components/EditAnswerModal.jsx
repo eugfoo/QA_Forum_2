@@ -1,11 +1,9 @@
-// src/components/EditAnswerModal.jsx
 import React, { useState, useEffect } from 'react';
 
 const EditAnswerModal = ({ isOpen, onClose, onSave, answer }) => {
     const [body, setBody] = useState('');
     console.log("Populating edit modal with:", answer?.body);
 
-    // When the modal opens or the answer changes, populate the text area with the current answer body.
     useEffect(() => {
         if (isOpen && answer?.body) {
 

@@ -7,7 +7,6 @@ const SidebarFilters = ({ currentUser }) => {
     const view = searchParams.get('view') || 'general';
     const search = searchParams.get('search') || '';
 
-    // Create URL with preserved search parameter
     const createUrl = (view, filter) => {
         let url = `/?view=${view}&filter=${filter}`;
         if (search) {
@@ -24,7 +23,6 @@ const SidebarFilters = ({ currentUser }) => {
 
     return (
         <aside className="w-52 bg-white p-5 rounded-lg shadow h-fit space-y-8 sticky top-4">
-            {/* Views */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-700">Question Views</h3>
                 <ul className="space-y-2">
@@ -50,8 +48,6 @@ const SidebarFilters = ({ currentUser }) => {
                     )}
                 </ul>
             </div>
-
-            {/* Sort By */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-700">Sort By</h3>
                 <ul className="space-y-2">

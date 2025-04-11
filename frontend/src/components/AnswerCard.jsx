@@ -29,20 +29,18 @@ const AnswerCard = ({ answer, isQuestionLocked, onVote, onDelete, onEdit }) => {
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
-            {/* MoreActions for answer (only if current user is the answer owner or if user is admin) */}
             {currentUser && 
                 (currentUser._id === answer.user._id || currentUser.isAdmin) && (
                 <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
                     <MoreActions
                         type="answer"
-                        answer={answer} // ✅ pass the actual answer
+                        answer={answer}
                         onEdit={(editedData) => onEdit(answer._id, editedData)}
                         onDelete={() => onDelete(answer._id)}
                     />
                 </div>
             )}
 
-            {/* Answer Content */}
             <div className="prose max-w-none">
                 <p className="text-gray-800 whitespace-pre-wrap">{answer.body}</p>
             </div>
@@ -60,7 +58,6 @@ const AnswerCard = ({ answer, isQuestionLocked, onVote, onDelete, onEdit }) => {
                     <span>{formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}</span>
                 </div>
             </div>
-            {/* Voting Panel at Bottom Right */}
             <div
                 className="absolute bottom-2 right-2 flex items-center gap-4"
                 onClick={(e) => e.stopPropagation()}

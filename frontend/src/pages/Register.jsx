@@ -1,4 +1,3 @@
-// src/components/Register.jsx
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/api';
@@ -20,19 +19,14 @@ const Register = () => {
             const response = await registerUser({ username, email, password, password2 });
             const { user, token, message } = response.data;
             toast.success(message || 'Registration successful');
-            
-            // Log the user in with the token
             login(user, token);
-            
-            // Navigate to home page
             navigate('/');
         } catch (error) {
             console.error('Registration error:', error);
             if (error.response && error.response.data) {
                 const errData = error.response.data;
                 const errorMessage = errData.error || (errData.errors && errData.errors[0]?.msg) || 'Registration failed';
-                
-                // Display specific error message for username taken
+
                 if (errorMessage === 'Username is already taken') {
                     toast.error('This username is already taken. Please choose another one.');
                 } else if (errorMessage === 'Email already registered') {
@@ -50,7 +44,7 @@ const Register = () => {
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
             <div className="w-full max-w-md bg-white p-6 rounded shadow">
                 <h2 className="text-2xl font-bold text-center mb-4">Register</h2>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="username" className="block mb-1 font-medium">

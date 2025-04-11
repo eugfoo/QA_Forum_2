@@ -1,67 +1,56 @@
-// src/components/Navbar.jsx
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { NotificationContext } from '../contexts/NotificationContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import api from '../services/api';
 
 const Navbar = () => {
     const { currentUser, logout } = useContext(AuthContext);
-    const { 
-        notifications, 
-        notificationCount, 
-        loading: notificationsLoading, 
+    const {
+        notifications,
+        notificationCount,
+        loading: notificationsLoading,
         markAllAsRead,
         refreshNotifications,
         setNotifications,
-        setNotificationCount 
+        setNotificationCount
     } = useContext(NotificationContext);
-    
+
     const navigate = useNavigate();
     const location = useLocation();
-    
-    // State for notifications dropdown
+
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const notificationDropdownRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Refresh notifications when route changes
     useEffect(() => {
         if (currentUser) {
             refreshNotifications();
         }
     }, [location.pathname, currentUser]);
 
-    // Toggle notifications dropdown on click
     const handleNotificationClick = (e) => {
         e.stopPropagation();
         setIsNotiOpen(!isNotiOpen);
     };
 
-    // Handle notification item click
     const handleNotificationItemClick = (notificationId) => {
-        // Update the UI immediately
-        setNotifications(prev => 
-            prev.map(notification => 
-                notification._id === notificationId 
-                    ? { ...notification, read: true } 
+        setNotifications(prev =>
+            prev.map(notification =>
+                notification._id === notificationId
+                    ? { ...notification, read: true }
                     : notification
             )
         );
-        
-        // Recalculate unread count
         const updatedUnreadCount = notifications
             .filter(n => n._id !== notificationId && !n.read)
             .length;
         setNotificationCount(updatedUnreadCount);
-        
-        // Close the dropdown
+
         setIsNotiOpen(false);
     };
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = async (e) => {
             if (
@@ -70,18 +59,14 @@ const Navbar = () => {
                 isNotiOpen
             ) {
                 setIsNotiOpen(false);
-                
-                // Mark notifications as read when closing the dropdown
+
                 if (notificationCount > 0) {
-                    // Immediately update UI
                     setNotificationCount(0);
                     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                    
-                    // Then call API in background
+
                     try {
                         await markAllAsRead();
                     } catch (error) {
-                        // If API call fails, refresh to get accurate count
                         refreshNotifications();
                     }
                 }
@@ -95,12 +80,10 @@ const Navbar = () => {
         try {
             const logoutSuccess = await logout();
             if (logoutSuccess) {
-                // Attempt the backend logout but catch errors so they don't trigger an error toast
                 await axios.get('/api/users/logout', { withCredentials: true }).catch(() => {
-                    // Silently fail - we're logging out anyway
                 });
 
-                navigate('/login');
+                navigate('/');
                 toast.success('You have been logged out.');
             } else {
                 toast.error('Failed to log out. Please try again.');
@@ -119,7 +102,6 @@ const Navbar = () => {
     return (
         <nav className="bg-gray-900 text-white sticky top-0 z-50">
             <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between">
-                {/* Left Section: Logo and Search */}
                 <div className="flex items-center space-x-4">
                     <Link to="/" className="text-xl font-bold">
                         Q&A Forum
@@ -146,11 +128,9 @@ const Navbar = () => {
                     </form>
                 </div>
 
-                {/* Right Section: Conditional Rendering */}
                 <div className="flex items-center space-x-4">
                     {currentUser ? (
                         <>
-                            {/* Notification Dropdown */}
                             <div className="relative inline-block">
                                 <button
                                     id="notificationButton"
@@ -231,7 +211,6 @@ const Navbar = () => {
                                                 to="/notifications"
                                                 className="block px-4 py-2 text-sm text-center text-gray-700 hover:bg-gray-100"
                                                 onClick={() => {
-                                                    // Close the dropdown when "See all notifications" is clicked
                                                     setIsNotiOpen(false);
                                                 }}
                                             >
@@ -242,7 +221,6 @@ const Navbar = () => {
                                 )}
                             </div>
 
-                            {/* Profile Dropdown */}
                             <div className="relative inline-block group">
                                 <button
                                     id="dropdownHoverButton"

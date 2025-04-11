@@ -1,19 +1,18 @@
-// src/components/MoreActions.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import EditQuestionModal from './EditQuestionModal';
-import EditAnswerModal from './EditAnswerModal'; // Make sure you have this component
+import EditAnswerModal from './EditAnswerModal'; 
 
 const MoreActions = ({
-    type = "question", // "question" or "answer"
+    type = "question", 
     question, 
-    answer,          // Provided for questions; for answers, this can be omitted
-    questionId,        // For questions; for answers, you might pass answerId
+    answer,          
+    questionId,       
     isLocked,
-    onEdit,            // Callback for editing
-    onLock,            // Callback for locking (only used for questions)
-    onDelete,          // Callback for deleting
-    questionTitle,     // Optional, for questions
+    onEdit,            
+    onLock,           
+    onDelete,          
+    questionTitle,     
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -149,7 +148,6 @@ const MoreActions = ({
                 )}
             </div>
 
-            {/* Conditionally render modals based on type */}
             {type === "question" ? (
                 <>
                     <EditQuestionModal
@@ -164,8 +162,8 @@ const MoreActions = ({
                     <EditAnswerModal
                         isOpen={showEditModal}
                         onClose={() => setShowEditModal(false)}
-                        onSave={handleEditSave} // Your callback for saving the answer
-                        answer={answer}   // Make sure selectedAnswer contains the answer data
+                        onSave={handleEditSave}
+                        answer={answer}   
                     />
                 </>
             )}

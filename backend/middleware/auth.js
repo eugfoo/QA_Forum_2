@@ -5,11 +5,8 @@ const User = require('../models/User');
 // Verify JWT token and attach user to request
 const auth = async (req, res, next) => {
     const authHeader = req.header('Authorization');
-    console.log(`Auth middleware for ${req.method} ${req.originalUrl}`);
-    console.log(`Auth header present: ${Boolean(authHeader)}`);
     
     try {
-        // Get token from authorization header
         const token = authHeader?.replace('Bearer ', '');
         
         if (!token) {
@@ -17,13 +14,11 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ error: 'Authentication required' });
         }
         
-        // Verify the token
         const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
         try {
             const decoded = jwt.verify(token, jwtSecret);
             console.log('Token decoded successfully:', decoded);
             
-            // Find the user
             const user = await User.findById(decoded.userId);
             
             if (!user) {
@@ -33,7 +28,6 @@ const auth = async (req, res, next) => {
             
             console.log(`User authenticated: ${user.username} (${user._id})`);
             
-            // Attach user to request
             req.user = user;
             req.token = token;
             

@@ -10,7 +10,6 @@ const ActivityTimeline = ({ userId }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     
-    // Load activities on component mount or when page changes
     useEffect(() => {
         loadActivities(currentPage);
     }, [currentPage, userId]);
@@ -20,8 +19,6 @@ const ActivityTimeline = ({ userId }) => {
         try {
             const response = await fetchUserActivity(page);
             
-            // Sort activities by date (newest first) - activities should already be sorted on server,
-            // but we'll sort them here just to make sure
             const sortedActivities = [...response.data.activities].sort((a, b) => 
                 new Date(b.createdAt) - new Date(a.createdAt)
             );
@@ -54,9 +51,6 @@ const ActivityTimeline = ({ userId }) => {
                     {activities.length === 0 ? (
                         <div className="text-center py-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                             <p className="text-gray-600">You don't have any activity yet.</p>
-                            <Link to="/" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
-                                Start by asking a question
-                            </Link>
                         </div>
                     ) : (
                         <>
@@ -135,7 +129,6 @@ const ActivityTimeline = ({ userId }) => {
                                 ))}
                             </ol>
                             
-                            {/* Pagination */}
                             <div className="flex items-center justify-between mt-6">
                                 <button 
                                     onClick={() => handlePageChange(currentPage - 1)}
@@ -149,7 +142,6 @@ const ActivityTimeline = ({ userId }) => {
                                 
                                 <div className="flex items-center gap-2">
                                     {[...Array(Math.min(totalPages, 5)).keys()].map(page => {
-                                        // Show 5 pages max with current page in the middle when possible
                                         let pageNum;
                                         if (totalPages <= 5) {
                                             pageNum = page + 1;

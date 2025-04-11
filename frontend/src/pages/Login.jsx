@@ -13,14 +13,12 @@ const Login = () => {
     const hasShownToast = useRef(false);
 
     useEffect(() => {
-        // Reset the toast flag when location changes
         hasShownToast.current = false;
 
         const timer = setTimeout(() => {
             if (!isLoggingOut && location.state?.from && !hasShownToast.current) {
                 toast.error('Please log in to continue.');
                 hasShownToast.current = true;
-                // Clear the location state after showing the toast
                 navigate('/login', { replace: true, state: {} });
             }
         }, 100);
@@ -34,16 +32,12 @@ const Login = () => {
             const response = await loginUser({ email, password });
             const { user, token, message } = response.data;
             toast.success(message || 'Login successful');
-
-            // Use the login function from AuthContext
             login(user, token);
             
-            // Redirect to previous page or home
             const redirectTo = location.state?.from?.pathname || '/';
             navigate(redirectTo);
         } catch (error) {
             console.error('Login error:', error);
-            // Only show toast if it's not a 401 error (which is already handled by the interceptor)
             if (error.response?.status !== 401) {
                 toast.error(error.response?.data?.error || 'Login failed');
             }
@@ -96,7 +90,7 @@ const Login = () => {
                 </form>
                 <p className="mt-4 text-center text-sm">
                     Don't have an account?{' '}
-                    <Link to="/users/register" className="text-blue-600 hover:underline">
+                    <Link to="/register" className="text-blue-600 hover:underline">
                         Register
                     </Link>
                 </p>

@@ -19,20 +19,17 @@ const EditProfile = () => {
     const handleSubmit = async (formData) => {
         setLoading(true);
         setError('');
-        
+
         try {
             const response = await updateUserProfile(formData);
-            
-            // Update the current user with the new profile data
             if (response.data && response.data.user) {
-                // Add cache-busting parameter to profilePic URL
                 const userData = {
                     ...response.data.user,
                     profilePic: response.data.user.profilePic + `?t=${new Date().getTime()}`
                 };
-                
+
                 setCurrentUser(userData);
-                
+
                 toast.success('Profile updated successfully!');
                 navigate('/profile');
             } else {
@@ -41,8 +38,7 @@ const EditProfile = () => {
         } catch (err) {
             const errorMessage = err.response?.data?.error || 'Failed to update profile';
             setError(errorMessage);
-            
-            // Display specific error message for username taken
+
             if (errorMessage === 'Username is already taken') {
                 toast.error('This username is already taken. Please choose another one.');
             } else {

@@ -1,6 +1,5 @@
 // src/components/HomePage.jsx
 import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
 import QuestionList from '../components/QuestionList';
 import { useSearchParams } from 'react-router-dom';
 import SidebarFilters from '../components/SidebarFilters';

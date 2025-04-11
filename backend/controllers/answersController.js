@@ -11,35 +11,30 @@ const postAnswer = async (req, res) => {
             return res.status(404).json({ error: 'Question not found' });
         }
         
-        // Prevent users from answering their own questions
         if (question.user.toString() === req.user._id.toString()) {
             return res.status(403).json({ error: 'You cannot answer your own question' });
         }
 
-        // Check if user has already answered (if needed)
         const existingAnswer = await Answer.findOne({
             question: questionId,
             user: req.user._id
         });
         const isFirstAnswer = !existingAnswer;
 
-        // Parse anonymous flag; if it's a string 'true', convert to boolean true
         const anonymousFlag =
             req.body.anonymous === true || req.body.anonymous === 'true';
 
-        // Use the original body content without any prefix
         const answerBody = req.body.body;
 
         const newAnswer = new Answer({
             body: answerBody,
             user: req.user._id,
             question: question._id,
-            anonymous: anonymousFlag // Save the anonymous flag on the document
+            anonymous: anonymousFlag
         });
 
         await newAnswer.save();
 
-        // Add the answer reference to the question
         question.answers.push(newAnswer._id);
         await question.save();
 
@@ -49,8 +44,6 @@ const postAnswer = async (req, res) => {
             });
         }
 
-        // Create a notification for the question author
-        // First check if a notification already exists for this answer
         const existingNotification = await Notification.findOne({
             recipient: question.user,
             question: question._id,
@@ -88,7 +81,6 @@ const voteAnswer = async (req, res) => {
             return res.status(404).json({ error: 'Answer not found' });
         }
         
-        // Prevent users from voting on their own answers
         if (answer.user.toString() === voterId.toString()) {
             return res.status(403).json({ error: 'You cannot vote on your own answer' });
         }
@@ -226,6 +218,6 @@ module.exports = {
     getEditAnswer,
     updateAnswer,
     deleteAnswer,
-    getAnswersForQuestion, // export the new handler
+    getAnswersForQuestion
 };
 

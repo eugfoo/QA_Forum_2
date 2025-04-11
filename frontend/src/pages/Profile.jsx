@@ -1,23 +1,21 @@
-// src/components/ProfilePage.jsx
 import React, { useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
-import { fetchCurrentUser } from '../services/api'; // You'll define this
+import { fetchCurrentUser } from '../services/api'; 
 import ActivityTimeline from '../components/ActivityTimeline';
 
 const ProfilePage = () => {
-    const { currentUser, setCurrentUser } = useContext(AuthContext); // ✅ fixed here
+    const { currentUser, setCurrentUser } = useContext(AuthContext);
     
     useEffect(() => {
         if (!currentUser) {
-            return null; // or a loader
+            return null; 
         }
         const getUpdatedUser = async () => {
             try {
                 const res = await fetchCurrentUser();
                 setCurrentUser(res.data.user);
             } catch (err) {
-                // Silently fail
             }
         };
         getUpdatedUser();
@@ -69,7 +67,6 @@ const ProfilePage = () => {
                     </div>
                 </div>
 
-                {/* Activity Timeline Component */}
                 <ActivityTimeline userId={currentUser._id} />
             </div>
         </div>

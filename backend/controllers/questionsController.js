@@ -13,13 +13,10 @@ const fetchAllQuestions = async (req, res, next) => {
 
         let query = {};
         
-        // Handle myProfile view - check for user either from auth middleware or token
         if (view === 'myProfile') {
-            // If req.user exists (auth middleware was used), use it
             if (req.user) {
                 query.user = req.user._id;
             } 
-            // Otherwise try to extract user from Authorization header
             else {
                 const authHeader = req.header('Authorization');
                 if (authHeader) {
@@ -31,11 +28,9 @@ const fetchAllQuestions = async (req, res, next) => {
                             query.user = decoded.userId;
                         }
                     } catch (error) {
-                        // Invalid token - just return no questions
                         return res.status(200).json({ questions: [] });
                     }
                 } else {
-                    // No auth header - return empty array for myProfile view
                     return res.status(200).json({ questions: [] });
                 }
             }
@@ -66,12 +61,11 @@ const fetchAllQuestions = async (req, res, next) => {
 
         res.status(200).json({ questions });
     } catch (err) {
-        console.error('❌ Error in fetchAllQuestions:', err);
+        console.error('Error in fetchAllQuestions:', err);
         next(err);
     }
 };
 
-// POST /api/questions
 const createQuestion = async (req, res) => {
     try {
         let { title, body, tags } = req.body;
@@ -103,7 +97,6 @@ const createQuestion = async (req, res) => {
         res.status(500).json({ error: 'An error occurred while posting the question.' });
     }
 };
-
 
 const searchQuestions = async (req, res) => {
     const searchTerm = req.query.q?.trim();
@@ -156,10 +149,6 @@ const getQuestionDetails = async (req, res) => {
         return res.status(500).json({ error: 'Error loading question details.' });
     }
 };
-
-
-
-
 
 const updateQuestion = async (req, res) => {
     try {
@@ -249,7 +238,7 @@ const deleteQuestion = async (req, res) => {
 const voteForQuestion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { voteType } = req.body; // Expected values: 'up' or 'down'
+        const { voteType } = req.body; 
         
         if (!req.user) {
             return res.status(401).json({ error: 'User not logged in.' });
@@ -312,8 +301,6 @@ const voteForQuestion = async (req, res) => {
         return res.status(500).json({ error: 'Error recording vote.' });
     }
 };
-
-
 
 const lockQuestion = async (req, res) => {
     try {

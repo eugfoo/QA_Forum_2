@@ -49,8 +49,36 @@ const fetchAllQuestions = async (req, res, next) => {
             .populate({ path: 'answers', populate: { path: 'user' } });
 
         const sortingMethods = {
-            popular: (a, b) => b.votes.up.length - a.votes.up.length,
-            unpopular: (a, b) => b.votes.down.length - a.votes.down.length,
+            popular: (a, b) => {
+                const upvoteDiff = b.votes.up.length - a.votes.up.length;
+                if (upvoteDiff !== 0) return upvoteDiff;
+                
+                const aHasVotes = a.votes.up.length > 0 || a.votes.down.length > 0;
+                const bHasVotes = b.votes.up.length > 0 || b.votes.down.length > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                if (a.votes.down.length === 0 && b.votes.down.length > 0) return -1;
+                if (a.votes.down.length > 0 && b.votes.down.length === 0) return 1;
+                
+                return b.createdAt - a.createdAt;
+            },
+            unpopular: (a, b) => {
+                const downvoteDiff = b.votes.down.length - a.votes.down.length;
+                if (downvoteDiff !== 0) return downvoteDiff;
+                
+                const aHasVotes = a.votes.up.length > 0 || a.votes.down.length > 0;
+                const bHasVotes = b.votes.up.length > 0 || b.votes.down.length > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                if (a.votes.up.length === 0 && b.votes.up.length > 0) return -1;
+                if (a.votes.up.length > 0 && b.votes.up.length === 0) return 1;
+                
+                return b.createdAt - a.createdAt;
+            },
             oldest: (a, b) => a.createdAt - b.createdAt,
             trending: (a, b) => b.answers.length - a.answers.length,
             latest: (a, b) => b.createdAt - a.createdAt,
@@ -136,8 +164,44 @@ const getQuestionDetails = async (req, res) => {
 
         const sortingMethods = {
             oldest: (a, b) => a.createdAt - b.createdAt,
-            popular: (a, b) => b.votes.up.length - a.votes.up.length,
-            unpopular: (a, b) => b.votes.down.length - a.votes.down.length,
+            popular: (a, b) => {
+                // First compare by number of upvotes (likes)
+                const upvoteDiff = b.votes.up.length - a.votes.up.length;
+                if (upvoteDiff !== 0) return upvoteDiff;
+                
+                // If both have the same number of upvotes, prioritize questions with no votes
+                const aHasVotes = a.votes.up.length > 0 || a.votes.down.length > 0;
+                const bHasVotes = b.votes.up.length > 0 || b.votes.down.length > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                // If both have votes or both don't have votes, prioritize questions with no downvotes
+                if (a.votes.down.length === 0 && b.votes.down.length > 0) return -1;
+                if (a.votes.down.length > 0 && b.votes.down.length === 0) return 1;
+                
+                // If all else is equal, sort by creation date (newer first)
+                return b.createdAt - a.createdAt;
+            },
+            unpopular: (a, b) => {
+                // First compare by number of downvotes (dislikes)
+                const downvoteDiff = b.votes.down.length - a.votes.down.length;
+                if (downvoteDiff !== 0) return downvoteDiff;
+                
+                // If both have the same number of downvotes, prioritize questions with no votes
+                const aHasVotes = a.votes.up.length > 0 || a.votes.down.length > 0;
+                const bHasVotes = b.votes.up.length > 0 || b.votes.down.length > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                // If both have votes or both don't have votes, prioritize questions with no upvotes
+                if (a.votes.up.length === 0 && b.votes.up.length > 0) return -1;
+                if (a.votes.up.length > 0 && b.votes.up.length === 0) return 1;
+                
+                // If all else is equal, sort by creation date (newer first)
+                return b.createdAt - a.createdAt;
+            },
             latest: (a, b) => b.createdAt - a.createdAt,
         };
 

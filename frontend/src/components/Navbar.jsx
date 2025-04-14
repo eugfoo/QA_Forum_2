@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import { NotificationContext } from '../contexts/NotificationContext';
 import axios from 'axios';
@@ -19,6 +19,7 @@ const Navbar = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const notificationDropdownRef = useRef(null);
@@ -113,7 +114,11 @@ const Navbar = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         if (!searchQuery.trim()) return;
-        navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+        
+        const currentFilter = searchParams.get('filter') || 'latest';
+        const currentView = searchParams.get('view') || 'general';
+        
+        navigate(`/?filter=${currentFilter}&view=${currentView}&search=${encodeURIComponent(searchQuery.trim())}`);
     };
 
     return (

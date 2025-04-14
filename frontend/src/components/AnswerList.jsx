@@ -52,8 +52,36 @@ const AnswerList = ({ questionId, isQuestionLocked, refreshKey }) => {
 
     const sortAnswers = (answersToSort) => {
         const sortingMethods = {
-            popular: (a, b) => (b.votes?.up?.length || 0) - (a.votes?.up?.length || 0),
-            unpopular: (a, b) => (b.votes?.down?.length || 0) - (a.votes?.down?.length || 0),
+            popular: (a, b) => {
+                const upvoteDiff = (b.votes?.up?.length || 0) - (a.votes?.up?.length || 0);
+                if (upvoteDiff !== 0) return upvoteDiff;
+                
+                const aHasVotes = (a.votes?.up?.length || 0) > 0 || (a.votes?.down?.length || 0) > 0;
+                const bHasVotes = (b.votes?.up?.length || 0) > 0 || (b.votes?.down?.length || 0) > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                if ((a.votes?.down?.length || 0) === 0 && (b.votes?.down?.length || 0) > 0) return -1;
+                if ((a.votes?.down?.length || 0) > 0 && (b.votes?.down?.length || 0) === 0) return 1;
+                
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            },
+            unpopular: (a, b) => {
+                const downvoteDiff = (b.votes?.down?.length || 0) - (a.votes?.down?.length || 0);
+                if (downvoteDiff !== 0) return downvoteDiff;
+                
+                const aHasVotes = (a.votes?.up?.length || 0) > 0 || (a.votes?.down?.length || 0) > 0;
+                const bHasVotes = (b.votes?.up?.length || 0) > 0 || (b.votes?.down?.length || 0) > 0;
+                
+                if (!aHasVotes && bHasVotes) return -1;
+                if (aHasVotes && !bHasVotes) return 1;
+                
+                if ((a.votes?.up?.length || 0) === 0 && (b.votes?.up?.length || 0) > 0) return -1;
+                if ((a.votes?.up?.length || 0) > 0 && (b.votes?.up?.length || 0) === 0) return 1;
+                
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            },
             oldest: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
             latest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         };
